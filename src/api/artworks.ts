@@ -17,6 +17,7 @@ export type ArtworkSortValue = 'year_asc' | 'year_desc' | 'price_asc' | 'price_d
 export interface ArtworkRequest {
   signal?: AbortSignal;
   sort?: ArtworkSortValue;
+  filters?: ArtworkFilterValues;
 }
 
 function apiUrl(): URL {
@@ -43,9 +44,17 @@ export async function getArtworks(options: ArtworkRequest = {}): Promise<Artwork
   url.searchParams.set('page', '1');
   url.searchParams.set('limit', '21');
   url.searchParams.set('sort', options.sort ?? 'year_desc');
+  if (options.filters?.yearStart !== undefined) {
+    url.searchParams.set('yearStart', String(options.filters.yearStart));
+  }
+  if (options.filters?.yearEnd !== undefined) {
+    url.searchParams.set('yearEnd', String(options.filters.yearEnd));
+  }
   const response = await fetch(url.toString(), {
     signal: options.signal ?? new AbortController().signal,
   });
   if (!response.ok) throw new Error('Unable to load artworks.');
   return response.json() as Promise<ArtworkPage>;
 }
+import type { ArtworkFilterValues } from '../artworks/filters';
+
