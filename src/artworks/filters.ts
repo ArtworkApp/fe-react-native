@@ -1,4 +1,5 @@
 export interface ArtworkFilterValues {
+  artistId?: string;
   yearStart?: number;
   yearEnd?: number;
 }
@@ -28,5 +29,6 @@ export function parseYearRange(from: string, to: string): YearRangeResult {
 }
 
 export function hasActiveFilters(filters: ArtworkFilterValues): boolean {
-  return filters.yearStart !== undefined || filters.yearEnd !== undefined;
+  return filters.artistId !== undefined || filters.yearStart !== undefined ||
+    filters.yearEnd !== undefined;
 }

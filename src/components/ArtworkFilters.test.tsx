@@ -1,5 +1,9 @@
-import { fireEvent, render, screen } from '@testing-library/react-native';
+import { act, fireEvent, render, screen } from '@testing-library/react-native';
 import { ArtworkFilters } from './ArtworkFilters';
+import { getArtists } from '../api/artists';
+
+jest.mock('../api/artists', () => ({ getArtists: jest.fn() }));
+const mockedGetArtists = jest.mocked(getArtists);
 
 test('applies a valid year range', () => {
   const onApply = jest.fn();
@@ -48,4 +52,43 @@ test('keeps the year fields reachable when the keyboard opens', () => {
   expect(screen.getByTestId('filter-sheet-scroll').props.keyboardShouldPersistTaps).toBe('handled');
   expect(screen.getByLabelText('From')).toBeTruthy();
   expect(screen.getByLabelText('To')).toBeTruthy();
+});
+
+test('applies a selected artist with the existing year filter', async () => {
+  jest.useFakeTimers();
+  mockedGetArtists.mockResolvedValue([{ id: '42', name: 'Claude Monet', country: 'France' }]);
+  const onApply = jest.fn();
+  render(<ArtworkFilters filters={{ yearStart: 1900 }} onApply={onApply} />);
+
+  fireEvent.press(screen.getByRole('button', { name: 'Filter artworks' }));
+  fireEvent.changeText(screen.getByLabelText('Artist'), 'Mon');
+  await act(async () => { jest.advanceTimersByTime(300); await Promise.resolve(); });
+  fireEvent.press(screen.getByRole('button', { name: /Claude Monet/ }));
+  fireEvent.press(screen.getByRole('button', { name: 'Apply Filters' }));
+
+  expect(onApply).toHaveBeenCalledWith({ artistId: '42', yearStart: 1900 });
+  jest.useRealTimers();
+});
+
+test('cancelling a new artist selection restores the applied artist', async () => {
+  jest.useFakeTimers();
+  mockedGetArtists.mockResolvedValue([{ id: '42', name: 'Claude Monet', country: 'France' }]);
+  const onApply = jest.fn();
+  const { rerender } = render(<ArtworkFilters filters={{}} onApply={onApply} />);
+
+  fireEvent.press(screen.getByRole('button', { name: 'Filter artworks' }));
+  fireEvent.changeText(screen.getByLabelText('Artist'), 'Mon');
+  await act(async () => { jest.advanceTimersByTime(300); await Promise.resolve(); });
+  fireEvent.press(screen.getByRole('button', { name: /Claude Monet/ }));
+  fireEvent.press(screen.getByRole('button', { name: 'Apply Filters' }));
+  rerender(<ArtworkFilters filters={{ artistId: '42' }} onApply={onApply} />);
+
+  fireEvent.press(screen.getByRole('button', { name: 'Filter artworks' }));
+  fireEvent.press(screen.getByRole('button', { name: 'Clear artist' }));
+  fireEvent.press(screen.getByRole('button', { name: 'Cancel' }));
+  fireEvent.press(screen.getByRole('button', { name: 'Filter artworks' }));
+
+  expect(screen.getByLabelText('Artist').props.value).toBe('Claude Monet');
+  expect(onApply).toHaveBeenCalledTimes(1);
+  jest.useRealTimers();
 });

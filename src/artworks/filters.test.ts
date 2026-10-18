@@ -23,4 +23,5 @@ test('recognizes active year filters', () => {
   expect(hasActiveFilters({})).toBe(false);
   expect(hasActiveFilters({ yearStart: 0 })).toBe(true);
   expect(hasActiveFilters({ yearEnd: 2020 })).toBe(true);
+  expect(hasActiveFilters({ artistId: '42' })).toBe(true);
 });

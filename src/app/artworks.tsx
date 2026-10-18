@@ -36,7 +36,9 @@ export default function ArtworkListingScreen() {
   }
 
   function changeFilters(nextFilters: ArtworkFilterValues) {
-    if (nextFilters.yearStart === filters.yearStart && nextFilters.yearEnd === filters.yearEnd) return;
+    if (nextFilters.artistId === filters.artistId &&
+        nextFilters.yearStart === filters.yearStart &&
+        nextFilters.yearEnd === filters.yearEnd) return;
     setState('loading');
     setFilters(nextFilters);
   }

@@ -1,6 +1,9 @@
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react-native';
 import ArtworkListingScreen from '../src/app/artworks';
 import { getArtworks } from '../src/api/artworks';
+import { getArtists } from '../src/api/artists';
+
+jest.mock('../src/api/artists', () => ({ getArtists: jest.fn() }));
 
 jest.mock('../src/api/artworks', () => ({
   getArtworks: jest.fn(),
@@ -8,8 +11,12 @@ jest.mock('../src/api/artworks', () => ({
 }));
 
 const mockedGetArtworks = jest.mocked(getArtworks);
+const mockedGetArtists = jest.mocked(getArtists);
 
-afterEach(() => jest.resetAllMocks());
+afterEach(() => {
+  jest.useRealTimers();
+  jest.resetAllMocks();
+});
 
 test('shows a two-column artwork listing from the backend', async () => {
   mockedGetArtworks.mockResolvedValue({
@@ -82,4 +89,27 @@ test('applies year filters and clears a filtered empty state', async () => {
   fireEvent.press(screen.getByRole('button', { name: 'Clear Filters' }));
   await waitFor(() => expect(mockedGetArtworks).toHaveBeenCalledTimes(3));
   expect(await screen.findByText('No artworks available yet.')).toBeTruthy();
+});
+
+test('applies a selected artist ID to the listing request', async () => {
+  mockedGetArtworks.mockResolvedValue({ data: [], pagination: {
+    page: 1, limit: 21, total: 0, totalPages: 0,
+  } });
+  mockedGetArtists.mockResolvedValue([{ id: '42', name: 'Claude Monet', country: 'France' }]);
+  render(<ArtworkListingScreen />);
+  await screen.findByText('No artworks available yet.');
+
+  jest.useFakeTimers();
+  fireEvent.press(screen.getByRole('button', { name: 'Filter artworks' }));
+  fireEvent.changeText(screen.getByLabelText('Artist'), 'Mon');
+  await act(async () => { jest.advanceTimersByTime(300); await Promise.resolve(); });
+  fireEvent.press(screen.getByRole('button', { name: /Claude Monet/ }));
+  await act(async () => {
+    fireEvent.press(screen.getByRole('button', { name: 'Apply Filters' }));
+    await Promise.resolve();
+  });
+
+  expect(mockedGetArtworks).toHaveBeenLastCalledWith(expect.objectContaining({
+    filters: { artistId: '42' }, sort: 'year_desc',
+  }));
 });

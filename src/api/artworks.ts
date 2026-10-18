@@ -1,3 +1,6 @@
+import type { ArtworkFilterValues } from '../artworks/filters';
+import { apiUrl } from './base-url';
+
 export interface Artwork {
   id: string;
   title: string;
@@ -20,14 +23,6 @@ export interface ArtworkRequest {
   filters?: ArtworkFilterValues;
 }
 
-function apiUrl(): URL {
-  const configuredUrl = process.env.EXPO_PUBLIC_API_URL;
-  if (!configuredUrl) {
-    throw new Error('Set EXPO_PUBLIC_API_URL to an address reachable from this device.');
-  }
-  return new URL(configuredUrl.endsWith('/') ? configuredUrl : `${configuredUrl}/`);
-}
-
 export function resolveArtworkImageUrl(path: string | null | undefined): string | null {
   if (!path) return null;
   try {
@@ -44,6 +39,9 @@ export async function getArtworks(options: ArtworkRequest = {}): Promise<Artwork
   url.searchParams.set('page', '1');
   url.searchParams.set('limit', '21');
   url.searchParams.set('sort', options.sort ?? 'year_desc');
+  if (options.filters?.artistId !== undefined) {
+    url.searchParams.set('artistId', options.filters.artistId);
+  }
   if (options.filters?.yearStart !== undefined) {
     url.searchParams.set('yearStart', String(options.filters.yearStart));
   }
@@ -56,5 +54,4 @@ export async function getArtworks(options: ArtworkRequest = {}): Promise<Artwork
   if (!response.ok) throw new Error('Unable to load artworks.');
   return response.json() as Promise<ArtworkPage>;
 }
-import type { ArtworkFilterValues } from '../artworks/filters';
 

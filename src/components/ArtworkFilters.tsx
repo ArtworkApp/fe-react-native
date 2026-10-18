@@ -2,7 +2,9 @@ import { useState } from 'react';
 import { KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, StyleSheet,
   Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import type { ArtistOption } from '../api/artists';
 import { type ArtworkFilterValues, parseYearRange } from '../artworks/filters';
+import { ArtistAutocomplete } from './ArtistAutocomplete';
 
 interface Props {
   filters: ArtworkFilterValues;
@@ -14,11 +16,14 @@ export function ArtworkFilters({ filters, onApply }: Props) {
   const [from, setFrom] = useState('');
   const [to, setTo] = useState('');
   const [error, setError] = useState<string | null>(null);
+  const [appliedArtist, setAppliedArtist] = useState<ArtistOption | null>(null);
+  const [draftArtist, setDraftArtist] = useState<ArtistOption | null>(null);
 
   function openSheet() {
     setFrom(filters.yearStart === undefined ? '' : String(filters.yearStart));
     setTo(filters.yearEnd === undefined ? '' : String(filters.yearEnd));
     setError(null);
+    setDraftArtist(appliedArtist?.id === filters.artistId ? appliedArtist : null);
     setOpen(true);
   }
 
@@ -29,7 +34,8 @@ export function ArtworkFilters({ filters, onApply }: Props) {
       return;
     }
     setOpen(false);
-    onApply(result.filters);
+    setAppliedArtist(draftArtist);
+    onApply({ ...result.filters, ...(draftArtist && { artistId: draftArtist.id }) });
   }
 
   return <>
@@ -46,6 +52,9 @@ export function ArtworkFilters({ filters, onApply }: Props) {
           <ScrollView testID="filter-sheet-scroll" keyboardShouldPersistTaps="handled"
             keyboardDismissMode="on-drag" contentContainerStyle={styles.sheetContent}>
             <Text style={styles.heading}>Filters</Text>
+            <View style={styles.artist}>
+              <ArtistAutocomplete selected={draftArtist} onSelect={setDraftArtist} />
+            </View>
             <Text style={styles.sectionHeading}>Year</Text>
             <View style={styles.inputs}>
               <View style={styles.inputGroup}>
@@ -88,6 +97,7 @@ const styles = StyleSheet.create({
     maxHeight: '85%' },
   sheetContent: { paddingHorizontal: 20, paddingTop: 20 },
   heading: { color: '#1c1917', fontSize: 20, fontWeight: '700', marginBottom: 20 },
+  artist: { marginBottom: 20 },
   sectionHeading: { color: '#1c1917', fontSize: 16, fontWeight: '600', marginBottom: 12 },
   inputs: { flexDirection: 'row', gap: 12 },
   inputGroup: { flex: 1 },
