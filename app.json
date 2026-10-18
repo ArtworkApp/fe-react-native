@@ -2,6 +2,7 @@
   "expo": {
     "name": "fe-react-native",
     "slug": "fe-react-native",
+    "scheme": "artworkapp",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -20,6 +21,7 @@
       "favicon": "./assets/favicon.png"
     },
     "plugins": [
+      "expo-router",
       "expo-status-bar",
       [
         "expo-splash-screen",
