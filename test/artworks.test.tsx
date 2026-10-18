@@ -63,3 +63,23 @@ test('changes sort and requests a fresh first page', async () => {
     sort: 'price_asc', signal: expect.any(AbortSignal),
   }));
 });
+
+test('applies year filters and clears a filtered empty state', async () => {
+  mockedGetArtworks.mockResolvedValue({ data: [], pagination: {
+    page: 1, limit: 21, total: 0, totalPages: 0,
+  } });
+  render(<ArtworkListingScreen />);
+  await screen.findByText('No artworks available yet.');
+
+  fireEvent.press(screen.getByRole('button', { name: 'Filter artworks' }));
+  fireEvent.changeText(screen.getByLabelText('From'), '1900');
+  fireEvent.press(screen.getByRole('button', { name: 'Apply Filters' }));
+
+  expect(await screen.findByText('No artworks found.')).toBeTruthy();
+  expect(mockedGetArtworks).toHaveBeenLastCalledWith(expect.objectContaining({
+    filters: { yearStart: 1900 }, sort: 'year_desc',
+  }));
+  fireEvent.press(screen.getByRole('button', { name: 'Clear Filters' }));
+  await waitFor(() => expect(mockedGetArtworks).toHaveBeenCalledTimes(3));
+  expect(await screen.findByText('No artworks available yet.')).toBeTruthy();
+});
