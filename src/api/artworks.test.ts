@@ -20,6 +20,18 @@ describe('artwork API', () => {
     );
   });
 
+  test('requests the selected backend sort', async () => {
+    process.env.EXPO_PUBLIC_API_URL = 'http://192.168.1.8:3001/api/v1';
+    jest.spyOn(global, 'fetch').mockResolvedValue({ ok: true, json: async () => ({ data: [] }) } as Response);
+
+    await getArtworks({ sort: 'price_asc' });
+
+    expect(global.fetch).toHaveBeenCalledWith(
+      'http://192.168.1.8:3001/api/v1/artworks?page=1&limit=21&sort=price_asc',
+      expect.objectContaining({ signal: expect.any(AbortSignal) }),
+    );
+  });
+
   test('resolves backend image paths against the API host', () => {
     process.env.EXPO_PUBLIC_API_URL = 'http://192.168.1.8:3001/api/v1';
     expect(resolveArtworkImageUrl('/api/v1/artworks/1/images/2')).toBe(

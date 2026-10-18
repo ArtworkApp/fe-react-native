@@ -12,6 +12,13 @@ export interface ArtworkPage {
   pagination: { page: number; limit: number; total: number; totalPages: number };
 }
 
+export type ArtworkSortValue = 'year_asc' | 'year_desc' | 'price_asc' | 'price_desc';
+
+export interface ArtworkRequest {
+  signal?: AbortSignal;
+  sort?: ArtworkSortValue;
+}
+
 function apiUrl(): URL {
   const configuredUrl = process.env.EXPO_PUBLIC_API_URL;
   if (!configuredUrl) {
@@ -31,12 +38,14 @@ export function resolveArtworkImageUrl(path: string | null | undefined): string 
   }
 }
 
-export async function getArtworks(signal: AbortSignal = new AbortController().signal): Promise<ArtworkPage> {
+export async function getArtworks(options: ArtworkRequest = {}): Promise<ArtworkPage> {
   const url = new URL('artworks', apiUrl());
   url.searchParams.set('page', '1');
   url.searchParams.set('limit', '21');
-  url.searchParams.set('sort', 'year_desc');
-  const response = await fetch(url.toString(), { signal });
+  url.searchParams.set('sort', options.sort ?? 'year_desc');
+  const response = await fetch(url.toString(), {
+    signal: options.signal ?? new AbortController().signal,
+  });
   if (!response.ok) throw new Error('Unable to load artworks.');
   return response.json() as Promise<ArtworkPage>;
 }
