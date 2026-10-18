@@ -189,3 +189,37 @@ test('cancelling taxonomy edits restores applied type and materials', async () =
     .props.accessibilityState.checked).toBe(true);
   expect(onApply).not.toHaveBeenCalled();
 });
+
+test('applies a selected country and discards an unsubmitted country edit', () => {
+  const onApply = jest.fn();
+  const { rerender } = render(<ArtworkFilters filters={{}} onApply={onApply} />);
+
+  fireEvent.press(screen.getByRole('button', { name: 'Filter artworks' }));
+  fireEvent.changeText(screen.getByLabelText('Artist country'), 'fra');
+  fireEvent.press(screen.getByRole('button', { name: 'France' }));
+  fireEvent.press(screen.getByRole('button', { name: 'Apply Filters' }));
+  expect(onApply).toHaveBeenCalledWith({ country: 'France' });
+
+  rerender(<ArtworkFilters filters={{ country: 'France' }} onApply={onApply} />);
+  fireEvent.press(screen.getByRole('button', { name: 'Filter artworks' }));
+  fireEvent.press(screen.getByRole('button', { name: 'Clear country' }));
+  fireEvent.press(screen.getByRole('button', { name: 'Cancel' }));
+  fireEvent.press(screen.getByRole('button', { name: 'Filter artworks' }));
+  expect(screen.getByLabelText('Artist country').props.value).toBe('France');
+  expect(onApply).toHaveBeenCalledTimes(1);
+});
+
+test('clears an applied country without sending free text as a filter', () => {
+  const onApply = jest.fn();
+  const { rerender } = render(<ArtworkFilters filters={{ country: 'France' }} onApply={onApply} />);
+
+  fireEvent.press(screen.getByRole('button', { name: 'Filter artworks' }));
+  fireEvent.press(screen.getByRole('button', { name: 'Clear country' }));
+  fireEvent.changeText(screen.getByLabelText('Artist country'), 'not a country');
+  fireEvent.press(screen.getByRole('button', { name: 'Apply Filters' }));
+  expect(onApply).toHaveBeenCalledWith({});
+
+  rerender(<ArtworkFilters filters={{}} onApply={onApply} />);
+  fireEvent.press(screen.getByRole('button', { name: 'Filter artworks' }));
+  expect(screen.getByLabelText('Artist country').props.value).toBe('');
+});

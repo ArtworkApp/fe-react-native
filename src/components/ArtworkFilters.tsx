@@ -8,6 +8,7 @@ import { type ArtworkFilterValues, parseYearRange } from '../artworks/filters';
 import { useLookup } from '../hooks/useLookup';
 import { ArtistAutocomplete } from './ArtistAutocomplete';
 import { ArtworkTaxonomyFilters } from './ArtworkTaxonomyFilters';
+import { CountryAutocomplete } from './CountryAutocomplete';
 
 interface Props {
   filters: ArtworkFilterValues;
@@ -22,6 +23,7 @@ export function ArtworkFilters({ filters, onApply }: Props) {
   const [appliedArtist, setAppliedArtist] = useState<ArtistOption | null>(null);
   const [draftArtist, setDraftArtist] = useState<ArtistOption | null>(null);
   const [draftTaxonomy, setDraftTaxonomy] = useState<ArtworkFilterValues>({});
+  const [draftCountry, setDraftCountry] = useState<string | undefined>();
   const types = useLookup(open, getArtworkTypes);
   const materials = useLookup(open, getMaterials);
 
@@ -32,6 +34,7 @@ export function ArtworkFilters({ filters, onApply }: Props) {
     setDraftArtist(appliedArtist?.id === filters.artistId ? appliedArtist : null);
     setDraftTaxonomy({ artworkTypeId: filters.artworkTypeId,
       materialIds: filters.materialIds ?? [] });
+    setDraftCountry(filters.country);
     setOpen(true);
   }
 
@@ -45,7 +48,8 @@ export function ArtworkFilters({ filters, onApply }: Props) {
     setAppliedArtist(draftArtist);
     onApply({ ...result.filters, ...(draftArtist && { artistId: draftArtist.id }),
       ...(draftTaxonomy.artworkTypeId && { artworkTypeId: draftTaxonomy.artworkTypeId }),
-      ...(draftTaxonomy.materialIds?.length && { materialIds: draftTaxonomy.materialIds }) });
+      ...(draftTaxonomy.materialIds?.length && { materialIds: draftTaxonomy.materialIds }),
+      ...(draftCountry && { country: draftCountry }) });
   }
 
   return <>
@@ -83,6 +87,9 @@ export function ArtworkFilters({ filters, onApply }: Props) {
               </View>
             </View>
             {error && <Text accessibilityRole="alert" style={styles.error}>{error}</Text>}
+            <View style={styles.country}>
+              <CountryAutocomplete selected={draftCountry} onSelect={setDraftCountry} />
+            </View>
             <Pressable accessibilityRole="button" accessibilityLabel="Apply Filters"
               style={styles.apply} onPress={apply}>
               <Text style={styles.applyText}>Apply Filters</Text>
@@ -118,6 +125,7 @@ const styles = StyleSheet.create({
   input: { backgroundColor: '#fff', borderColor: '#d6d3d1', borderRadius: 10,
     borderWidth: 1, color: '#1c1917', fontSize: 16, minHeight: 48, paddingHorizontal: 12 },
   error: { color: '#b91c1c', marginTop: 12 },
+  country: { marginTop: 20 },
   apply: { alignItems: 'center', backgroundColor: '#1c1917', borderRadius: 10,
     justifyContent: 'center', minHeight: 48, marginTop: 24 },
   applyText: { color: '#fff', fontSize: 16, fontWeight: '600' },

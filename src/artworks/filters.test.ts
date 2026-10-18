@@ -27,6 +27,7 @@ test('recognizes active year filters', () => {
   expect(hasActiveFilters({ artistId: '42' })).toBe(true);
   expect(hasActiveFilters({ artworkTypeId: '1' })).toBe(true);
   expect(hasActiveFilters({ materialIds: ['2'] })).toBe(true);
+  expect(hasActiveFilters({ country: 'France' })).toBe(true);
 });
 
 test('type changes retain only materials associated with the new type', () => {

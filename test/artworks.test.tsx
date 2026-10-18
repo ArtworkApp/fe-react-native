@@ -145,3 +145,23 @@ test('applies selected artwork type and materials to the listing request', async
     filters: { artworkTypeId: '1', materialIds: ['2'] }, sort: 'year_desc',
   }));
 });
+
+test('applies a selected country to the listing request', async () => {
+  mockedGetArtworks.mockResolvedValue({ data: [], pagination: {
+    page: 1, limit: 21, total: 0, totalPages: 0,
+  } });
+  render(<ArtworkListingScreen />);
+  await screen.findByText('No artworks available yet.');
+
+  fireEvent.press(screen.getByRole('button', { name: 'Filter artworks' }));
+  fireEvent.changeText(screen.getByLabelText('Artist country'), 'fra');
+  fireEvent.press(screen.getByRole('button', { name: 'France' }));
+  await act(async () => {
+    fireEvent.press(screen.getByRole('button', { name: 'Apply Filters' }));
+    await Promise.resolve();
+  });
+
+  expect(mockedGetArtworks).toHaveBeenLastCalledWith(expect.objectContaining({
+    filters: { country: 'France' }, sort: 'year_desc',
+  }));
+});

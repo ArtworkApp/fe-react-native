@@ -39,6 +39,7 @@ export default function ArtworkListingScreen() {
     if (nextFilters.artistId === filters.artistId &&
         nextFilters.artworkTypeId === filters.artworkTypeId &&
         (nextFilters.materialIds ?? []).join(',') === (filters.materialIds ?? []).join(',') &&
+        nextFilters.country === filters.country &&
         nextFilters.yearStart === filters.yearStart &&
         nextFilters.yearEnd === filters.yearEnd) return;
     setState('loading');

@@ -54,6 +54,9 @@ export async function getArtworks(options: ArtworkRequest = {}): Promise<Artwork
   if (options.filters?.yearEnd !== undefined) {
     url.searchParams.set('yearEnd', String(options.filters.yearEnd));
   }
+  if (options.filters?.country !== undefined) {
+    url.searchParams.set('country', options.filters.country);
+  }
   const response = await fetch(url.toString(), {
     signal: options.signal ?? new AbortController().signal,
   });
