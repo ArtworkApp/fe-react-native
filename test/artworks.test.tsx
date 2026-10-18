@@ -47,3 +47,19 @@ test('retries an initial request failure', async () => {
   await waitFor(() => expect(mockedGetArtworks).toHaveBeenCalledTimes(2));
   expect(await screen.findByText('No artworks available yet.')).toBeTruthy();
 });
+
+test('changes sort and requests a fresh first page', async () => {
+  mockedGetArtworks.mockResolvedValue({ data: [], pagination: {
+    page: 1, limit: 21, total: 0, totalPages: 0,
+  } });
+  render(<ArtworkListingScreen />);
+  await screen.findByText('No artworks available yet.');
+
+  fireEvent.press(screen.getByRole('button', { name: 'Sort artworks' }));
+  fireEvent.press(screen.getByRole('radio', { name: 'Price: Lowest First' }));
+
+  await waitFor(() => expect(mockedGetArtworks).toHaveBeenCalledTimes(2));
+  expect(mockedGetArtworks).toHaveBeenLastCalledWith(expect.objectContaining({
+    sort: 'price_asc', signal: expect.any(AbortSignal),
+  }));
+});

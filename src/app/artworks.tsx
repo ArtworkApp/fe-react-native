@@ -2,8 +2,9 @@ import { StatusBar } from 'expo-status-bar';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useEffect, useState } from 'react';
 import { FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
-import { Artwork, getArtworks } from '../api/artworks';
+import { getArtworks, type Artwork, type ArtworkSortValue } from '../api/artworks';
 import { ArtworkCard } from '../components/ArtworkCard';
+import { ArtworkSort } from '../components/ArtworkSort';
 
 type ListingState = 'loading' | 'ready' | 'error';
 
@@ -11,11 +12,12 @@ export default function ArtworkListingScreen() {
   const [artworks, setArtworks] = useState<Artwork[]>([]);
   const [state, setState] = useState<ListingState>('loading');
   const [retry, setRetry] = useState(0);
+  const [sort, setSort] = useState<ArtworkSortValue>('year_desc');
 
   useEffect(() => {
     const controller = new AbortController();
     setState('loading');
-    getArtworks(controller.signal).then((page) => {
+    getArtworks({ signal: controller.signal, sort }).then((page) => {
       if (controller.signal.aborted) return;
       setArtworks(page.data);
       setState('ready');
@@ -23,7 +25,12 @@ export default function ArtworkListingScreen() {
       if (!controller.signal.aborted) setState('error');
     });
     return () => controller.abort();
-  }, [retry]);
+  }, [retry, sort]);
+
+  function changeSort(nextSort: ArtworkSortValue) {
+    setState('loading');
+    setSort(nextSort);
+  }
 
   return (
     <SafeAreaView style={styles.container}>
@@ -37,6 +44,9 @@ export default function ArtworkListingScreen() {
           <Text style={styles.brand}>ArtworkApp</Text>
           <Text style={styles.heading}>Browse Art</Text>
           <Text style={styles.subheading}>Discover original artworks</Text>
+          <View style={styles.controls}>
+            <ArtworkSort sort={sort} onChange={changeSort} />
+          </View>
         </View>}
         ListEmptyComponent={state === 'loading' ? (
           <View style={styles.skeletonGrid} accessibilityLabel="Loading artworks">
@@ -66,6 +76,7 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#fafaf9' },
   list: { paddingHorizontal: 11, paddingBottom: 32, flexGrow: 1 },
   header: { paddingHorizontal: 5, paddingTop: 20, paddingBottom: 16 },
+  controls: { flexDirection: 'row', marginTop: 20 },
   brand: { color: '#57534e', fontSize: 13, fontWeight: '700', letterSpacing: 1 },
   heading: { color: '#1c1917', fontSize: 28, fontWeight: '700', marginTop: 18 },
   subheading: { color: '#57534e', fontSize: 15, marginTop: 4 },
