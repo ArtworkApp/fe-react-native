@@ -42,6 +42,12 @@ export async function getArtworks(options: ArtworkRequest = {}): Promise<Artwork
   if (options.filters?.artistId !== undefined) {
     url.searchParams.set('artistId', options.filters.artistId);
   }
+  if (options.filters?.artworkTypeId !== undefined) {
+    url.searchParams.set('artworkTypeId', options.filters.artworkTypeId);
+  }
+  if (options.filters?.materialIds?.length) {
+    url.searchParams.set('materialIds', options.filters.materialIds.join(','));
+  }
   if (options.filters?.yearStart !== undefined) {
     url.searchParams.set('yearStart', String(options.filters.yearStart));
   }

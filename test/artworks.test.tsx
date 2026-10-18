@@ -2,8 +2,10 @@ import { act, fireEvent, render, screen, waitFor } from '@testing-library/react-
 import ArtworkListingScreen from '../src/app/artworks';
 import { getArtworks } from '../src/api/artworks';
 import { getArtists } from '../src/api/artists';
+import { getArtworkTypes, getMaterials } from '../src/api/taxonomy';
 
 jest.mock('../src/api/artists', () => ({ getArtists: jest.fn() }));
+jest.mock('../src/api/taxonomy', () => ({ getArtworkTypes: jest.fn(), getMaterials: jest.fn() }));
 
 jest.mock('../src/api/artworks', () => ({
   getArtworks: jest.fn(),
@@ -12,6 +14,13 @@ jest.mock('../src/api/artworks', () => ({
 
 const mockedGetArtworks = jest.mocked(getArtworks);
 const mockedGetArtists = jest.mocked(getArtists);
+const mockedGetArtworkTypes = jest.mocked(getArtworkTypes);
+const mockedGetMaterials = jest.mocked(getMaterials);
+
+beforeEach(() => {
+  mockedGetArtworkTypes.mockImplementation(() => new Promise(() => {}));
+  mockedGetMaterials.mockImplementation(() => new Promise(() => {}));
+});
 
 afterEach(() => {
   jest.useRealTimers();
@@ -111,5 +120,28 @@ test('applies a selected artist ID to the listing request', async () => {
 
   expect(mockedGetArtworks).toHaveBeenLastCalledWith(expect.objectContaining({
     filters: { artistId: '42' }, sort: 'year_desc',
+  }));
+});
+
+test('applies selected artwork type and materials to the listing request', async () => {
+  mockedGetArtworks.mockResolvedValue({ data: [], pagination: {
+    page: 1, limit: 21, total: 0, totalPages: 0,
+  } });
+  mockedGetArtworkTypes.mockResolvedValue([{ id: '1', name: 'Painting', active: true }]);
+  mockedGetMaterials.mockResolvedValue([{ id: '2', name: 'Oil', active: true,
+    artworkTypeId: '1', artworkType: null }]);
+  render(<ArtworkListingScreen />);
+  await screen.findByText('No artworks available yet.');
+
+  fireEvent.press(screen.getByRole('button', { name: 'Filter artworks' }));
+  fireEvent.press(await screen.findByRole('radio', { name: 'Artwork type: Painting' }));
+  fireEvent.press(screen.getByRole('checkbox', { name: 'Material: Oil' }));
+  await act(async () => {
+    fireEvent.press(screen.getByRole('button', { name: 'Apply Filters' }));
+    await Promise.resolve();
+  });
+
+  expect(mockedGetArtworks).toHaveBeenLastCalledWith(expect.objectContaining({
+    filters: { artworkTypeId: '1', materialIds: ['2'] }, sort: 'year_desc',
   }));
 });

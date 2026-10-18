@@ -1,5 +1,9 @@
+import type { Material } from '../api/taxonomy';
+
 export interface ArtworkFilterValues {
   artistId?: string;
+  artworkTypeId?: string;
+  materialIds?: string[];
   yearStart?: number;
   yearEnd?: number;
 }
@@ -29,6 +33,27 @@ export function parseYearRange(from: string, to: string): YearRangeResult {
 }
 
 export function hasActiveFilters(filters: ArtworkFilterValues): boolean {
-  return filters.artistId !== undefined || filters.yearStart !== undefined ||
+  return filters.artistId !== undefined || filters.artworkTypeId !== undefined ||
+    Boolean(filters.materialIds?.length) || filters.yearStart !== undefined ||
     filters.yearEnd !== undefined;
+}
+
+export function selectArtworkType(filters: ArtworkFilterValues, typeId: string | undefined,
+  materials: Material[]): ArtworkFilterValues {
+  const materialIds = typeId
+    ? (filters.materialIds ?? []).filter((id) => materials.some((material) =>
+      material.id === id && material.artworkTypeId === typeId))
+    : filters.materialIds ?? [];
+  const next = { ...filters, materialIds };
+  if (typeId) next.artworkTypeId = typeId;
+  else delete next.artworkTypeId;
+  return next;
+}
+
+export function toggleMaterial(filters: ArtworkFilterValues, materialId: string): ArtworkFilterValues {
+  const selected = filters.materialIds ?? [];
+  const materialIds = selected.includes(materialId)
+    ? selected.filter((id) => id !== materialId)
+    : [...selected, materialId];
+  return { ...filters, materialIds };
 }

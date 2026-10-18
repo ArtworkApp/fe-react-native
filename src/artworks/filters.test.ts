@@ -1,4 +1,5 @@
-import { hasActiveFilters, parseYearRange } from './filters';
+import { hasActiveFilters, parseYearRange, selectArtworkType,
+  toggleMaterial } from './filters';
 
 test('accepts optional inclusive years from 0000 through 9999', () => {
   expect(parseYearRange('', '')).toEqual({ filters: {} });
@@ -24,4 +25,22 @@ test('recognizes active year filters', () => {
   expect(hasActiveFilters({ yearStart: 0 })).toBe(true);
   expect(hasActiveFilters({ yearEnd: 2020 })).toBe(true);
   expect(hasActiveFilters({ artistId: '42' })).toBe(true);
+  expect(hasActiveFilters({ artworkTypeId: '1' })).toBe(true);
+  expect(hasActiveFilters({ materialIds: ['2'] })).toBe(true);
+});
+
+test('type changes retain only materials associated with the new type', () => {
+  const materials = [
+    { id: '2', name: 'Oil', active: true, artworkTypeId: '1', artworkType: null },
+    { id: '3', name: 'Bronze', active: true, artworkTypeId: '2', artworkType: null },
+  ];
+  expect(selectArtworkType({ artworkTypeId: '1', materialIds: ['2', '3'] },
+    '2', materials)).toEqual({ artworkTypeId: '2', materialIds: ['3'] });
+  expect(selectArtworkType({ artworkTypeId: '2', materialIds: ['3'] },
+    undefined, materials)).toEqual({ materialIds: ['3'] });
+});
+
+test('materials can be selected and deselected independently', () => {
+  expect(toggleMaterial({ materialIds: ['2'] }, '3')).toEqual({ materialIds: ['2', '3'] });
+  expect(toggleMaterial({ materialIds: ['2', '3'] }, '2')).toEqual({ materialIds: ['3'] });
 });

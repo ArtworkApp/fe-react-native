@@ -56,6 +56,18 @@ describe('artwork API', () => {
     );
   });
 
+  test('sends type and comma-separated material IDs', async () => {
+    process.env.EXPO_PUBLIC_API_URL = 'http://192.168.1.8:3001/api/v1';
+    jest.spyOn(global, 'fetch').mockResolvedValue({ ok: true, json: async () => ({ data: [] }) } as Response);
+
+    await getArtworks({ filters: { artworkTypeId: '1', materialIds: ['2', '3'] } });
+
+    expect(global.fetch).toHaveBeenCalledWith(
+      'http://192.168.1.8:3001/api/v1/artworks?page=1&limit=21&sort=year_desc&artworkTypeId=1&materialIds=2%2C3',
+      expect.objectContaining({ signal: expect.any(AbortSignal) }),
+    );
+  });
+
   test('resolves backend image paths against the API host', () => {
     process.env.EXPO_PUBLIC_API_URL = 'http://192.168.1.8:3001/api/v1';
     expect(resolveArtworkImageUrl('/api/v1/artworks/1/images/2')).toBe(
