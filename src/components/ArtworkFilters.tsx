@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { Modal, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, StyleSheet,
+  Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { type ArtworkFilterValues, parseYearRange } from '../artworks/filters';
 
@@ -37,37 +38,41 @@ export function ArtworkFilters({ filters, onApply }: Props) {
       <Text style={styles.triggerText}>Filter</Text>
     </Pressable>
     {open && <Modal animationType="slide" transparent visible onRequestClose={() => setOpen(false)}>
-      <View style={styles.overlay}>
+      <KeyboardAvoidingView testID="filter-keyboard-avoiding-view"
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={styles.overlay}>
         <Pressable accessibilityRole="button" accessibilityLabel="Cancel filters"
           style={styles.backdrop} onPress={() => setOpen(false)} />
         <SafeAreaView edges={['bottom']} style={styles.sheet} accessibilityViewIsModal>
-          <Text style={styles.heading}>Filters</Text>
-          <Text style={styles.sectionHeading}>Year</Text>
-          <View style={styles.inputs}>
-            <View style={styles.inputGroup}>
-              <Text style={styles.label}>From</Text>
-              <TextInput accessibilityLabel="From" keyboardType="number-pad" maxLength={4}
-                value={from} onChangeText={(value) => { setFrom(value); setError(null); }}
-                placeholder="0000" style={styles.input} />
+          <ScrollView testID="filter-sheet-scroll" keyboardShouldPersistTaps="handled"
+            keyboardDismissMode="on-drag" contentContainerStyle={styles.sheetContent}>
+            <Text style={styles.heading}>Filters</Text>
+            <Text style={styles.sectionHeading}>Year</Text>
+            <View style={styles.inputs}>
+              <View style={styles.inputGroup}>
+                <Text style={styles.label}>From</Text>
+                <TextInput accessibilityLabel="From" keyboardType="number-pad" maxLength={4}
+                  value={from} onChangeText={(value) => { setFrom(value); setError(null); }}
+                  placeholder="0000" style={styles.input} />
+              </View>
+              <View style={styles.inputGroup}>
+                <Text style={styles.label}>To</Text>
+                <TextInput accessibilityLabel="To" keyboardType="number-pad" maxLength={4}
+                  value={to} onChangeText={(value) => { setTo(value); setError(null); }}
+                  placeholder="9999" style={styles.input} />
+              </View>
             </View>
-            <View style={styles.inputGroup}>
-              <Text style={styles.label}>To</Text>
-              <TextInput accessibilityLabel="To" keyboardType="number-pad" maxLength={4}
-                value={to} onChangeText={(value) => { setTo(value); setError(null); }}
-                placeholder="9999" style={styles.input} />
-            </View>
-          </View>
-          {error && <Text accessibilityRole="alert" style={styles.error}>{error}</Text>}
-          <Pressable accessibilityRole="button" accessibilityLabel="Apply Filters"
-            style={styles.apply} onPress={apply}>
-            <Text style={styles.applyText}>Apply Filters</Text>
-          </Pressable>
-          <Pressable accessibilityRole="button" accessibilityLabel="Cancel"
-            style={styles.cancel} onPress={() => setOpen(false)}>
-            <Text style={styles.cancelText}>Cancel</Text>
-          </Pressable>
+            {error && <Text accessibilityRole="alert" style={styles.error}>{error}</Text>}
+            <Pressable accessibilityRole="button" accessibilityLabel="Apply Filters"
+              style={styles.apply} onPress={apply}>
+              <Text style={styles.applyText}>Apply Filters</Text>
+            </Pressable>
+            <Pressable accessibilityRole="button" accessibilityLabel="Cancel"
+              style={styles.cancel} onPress={() => setOpen(false)}>
+              <Text style={styles.cancelText}>Cancel</Text>
+            </Pressable>
+          </ScrollView>
         </SafeAreaView>
-      </View>
+      </KeyboardAvoidingView>
     </Modal>}
   </>;
 }
@@ -80,7 +85,8 @@ const styles = StyleSheet.create({
   overlay: { flex: 1, justifyContent: 'flex-end' },
   backdrop: { ...StyleSheet.absoluteFill, backgroundColor: 'rgba(28,25,23,0.5)' },
   sheet: { backgroundColor: '#fff', borderTopLeftRadius: 24, borderTopRightRadius: 24,
-    paddingHorizontal: 20, paddingTop: 20 },
+    maxHeight: '85%' },
+  sheetContent: { paddingHorizontal: 20, paddingTop: 20 },
   heading: { color: '#1c1917', fontSize: 20, fontWeight: '700', marginBottom: 20 },
   sectionHeading: { color: '#1c1917', fontSize: 16, fontWeight: '600', marginBottom: 12 },
   inputs: { flexDirection: 'row', gap: 12 },

@@ -39,3 +39,13 @@ test('keeps the sheet open and explains an invalid range', () => {
   expect(screen.getByText('From year must not exceed To year.')).toBeTruthy();
   expect(onApply).not.toHaveBeenCalled();
 });
+
+test('keeps the year fields reachable when the keyboard opens', () => {
+  render(<ArtworkFilters filters={{}} onApply={jest.fn()} />);
+  fireEvent.press(screen.getByRole('button', { name: 'Filter artworks' }));
+
+  expect(screen.getByTestId('filter-keyboard-avoiding-view')).toBeTruthy();
+  expect(screen.getByTestId('filter-sheet-scroll').props.keyboardShouldPersistTaps).toBe('handled');
+  expect(screen.getByLabelText('From')).toBeTruthy();
+  expect(screen.getByLabelText('To')).toBeTruthy();
+});
