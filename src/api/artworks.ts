@@ -61,6 +61,11 @@ export async function getArtworks(options: ArtworkRequest = {}): Promise<Artwork
     signal: options.signal ?? new AbortController().signal,
   });
   if (!response.ok) throw new Error('Unable to load artworks.');
-  return response.json() as Promise<ArtworkPage>;
+  const payload: unknown = await response.json();
+  if (typeof payload !== 'object' || payload === null || !('data' in payload) ||
+      !Array.isArray((payload as { data?: unknown }).data)) {
+    throw new Error('Invalid artworks response.');
+  }
+  return payload as ArtworkPage;
 }
 

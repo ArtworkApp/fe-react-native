@@ -20,6 +20,13 @@ describe('artwork API', () => {
     );
   });
 
+  test('rejects invalid artwork payloads before casting them', async () => {
+    process.env.EXPO_PUBLIC_API_URL = 'http://192.168.1.8:3001/api/v1';
+    jest.spyOn(global, 'fetch').mockResolvedValue({ ok: true, json: async () => ({ pagination: { page: 1 } }) } as Response);
+
+    await expect(getArtworks()).rejects.toThrow('Invalid artworks response.');
+  });
+
   test('requests the selected backend sort', async () => {
     process.env.EXPO_PUBLIC_API_URL = 'http://192.168.1.8:3001/api/v1';
     jest.spyOn(global, 'fetch').mockResolvedValue({ ok: true, json: async () => ({ data: [] }) } as Response);
