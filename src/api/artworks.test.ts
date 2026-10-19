@@ -27,9 +27,19 @@ describe('artwork API', () => {
     await expect(getArtworks()).rejects.toThrow('Invalid artworks response.');
   });
 
-  test('requests the selected backend sort', async () => {
+  test('rejects artwork payloads missing pagination metadata', async () => {
     process.env.EXPO_PUBLIC_API_URL = 'http://192.168.1.8:3001/api/v1';
     jest.spyOn(global, 'fetch').mockResolvedValue({ ok: true, json: async () => ({ data: [] }) } as Response);
+
+    await expect(getArtworks()).rejects.toThrow('Invalid artworks response.');
+  });
+
+  test('requests the selected backend sort', async () => {
+    process.env.EXPO_PUBLIC_API_URL = 'http://192.168.1.8:3001/api/v1';
+    jest.spyOn(global, 'fetch').mockResolvedValue({ ok: true, json: async () => ({
+      data: [],
+      pagination: { page: 1, limit: 21, total: 0, totalPages: 0 },
+    }) } as Response);
 
     await getArtworks({ sort: 'price_asc' });
 
@@ -41,7 +51,10 @@ describe('artwork API', () => {
 
   test('sends inclusive year filters to the backend', async () => {
     process.env.EXPO_PUBLIC_API_URL = 'http://192.168.1.8:3001/api/v1';
-    jest.spyOn(global, 'fetch').mockResolvedValue({ ok: true, json: async () => ({ data: [] }) } as Response);
+    jest.spyOn(global, 'fetch').mockResolvedValue({ ok: true, json: async () => ({
+      data: [],
+      pagination: { page: 1, limit: 21, total: 0, totalPages: 0 },
+    }) } as Response);
 
     await getArtworks({ filters: { yearStart: 0, yearEnd: 1950 } });
 
@@ -53,7 +66,10 @@ describe('artwork API', () => {
 
   test('sends the selected artist ID alongside the year range', async () => {
     process.env.EXPO_PUBLIC_API_URL = 'http://192.168.1.8:3001/api/v1';
-    jest.spyOn(global, 'fetch').mockResolvedValue({ ok: true, json: async () => ({ data: [] }) } as Response);
+    jest.spyOn(global, 'fetch').mockResolvedValue({ ok: true, json: async () => ({
+      data: [],
+      pagination: { page: 1, limit: 21, total: 0, totalPages: 0 },
+    }) } as Response);
 
     await getArtworks({ filters: { artistId: '42', yearStart: 1900 } });
 
@@ -65,7 +81,10 @@ describe('artwork API', () => {
 
   test('sends type and comma-separated material IDs', async () => {
     process.env.EXPO_PUBLIC_API_URL = 'http://192.168.1.8:3001/api/v1';
-    jest.spyOn(global, 'fetch').mockResolvedValue({ ok: true, json: async () => ({ data: [] }) } as Response);
+    jest.spyOn(global, 'fetch').mockResolvedValue({ ok: true, json: async () => ({
+      data: [],
+      pagination: { page: 1, limit: 21, total: 0, totalPages: 0 },
+    }) } as Response);
 
     await getArtworks({ filters: { artworkTypeId: '1', materialIds: ['2', '3'] } });
 
@@ -77,7 +96,10 @@ describe('artwork API', () => {
 
   test('sends the selected artist country', async () => {
     process.env.EXPO_PUBLIC_API_URL = 'http://192.168.1.8:3001/api/v1';
-    jest.spyOn(global, 'fetch').mockResolvedValue({ ok: true, json: async () => ({ data: [] }) } as Response);
+    jest.spyOn(global, 'fetch').mockResolvedValue({ ok: true, json: async () => ({
+      data: [],
+      pagination: { page: 1, limit: 21, total: 0, totalPages: 0 },
+    }) } as Response);
 
     await getArtworks({ filters: { country: 'United Kingdom' } });
 

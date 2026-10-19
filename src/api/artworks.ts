@@ -63,7 +63,9 @@ export async function getArtworks(options: ArtworkRequest = {}): Promise<Artwork
   if (!response.ok) throw new Error('Unable to load artworks.');
   const payload: unknown = await response.json();
   if (typeof payload !== 'object' || payload === null || !('data' in payload) ||
-      !Array.isArray((payload as { data?: unknown }).data)) {
+      !Array.isArray((payload as { data?: unknown }).data) || !('pagination' in payload) ||
+      typeof (payload as { pagination?: unknown }).pagination !== 'object' ||
+      (payload as { pagination?: unknown }).pagination === null) {
     throw new Error('Invalid artworks response.');
   }
   return payload as ArtworkPage;
