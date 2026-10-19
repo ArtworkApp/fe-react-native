@@ -187,8 +187,6 @@ export const COUNTRY_NAMES: readonly string[] = [
   'Pitcairn Islands',
   'Poland',
   'Portugal',
-  'Pseudo-Accents',
-  'Pseudo-Bidi',
   'Puerto Rico',
   'Qatar',
   'Réunion',
