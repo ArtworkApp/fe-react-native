@@ -34,7 +34,7 @@ export function ArtworkSort({ sort, onChange }: Props) {
       </Pressable>
       {open && <Modal animationType="slide" transparent visible onRequestClose={() => setOpen(false)}>
         <View style={styles.overlay}>
-          <Pressable accessibilityRole="button" accessibilityLabel="Close sorting"
+          <Pressable accessibilityRole="button" accessibilityLabel="Dismiss sort options"
             style={styles.backdrop} onPress={() => setOpen(false)} />
           <SafeAreaView edges={['bottom']} style={styles.sheet} accessibilityViewIsModal>
             <Text style={styles.heading}>Sort By</Text>
