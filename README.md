@@ -35,3 +35,12 @@ The home screen is a placeholder for future work. The `/artworks` route loads th
 Route tests live in `test/` because Expo Router treats files in `src/app/` as routes.
 
 Run `npm test` for unit and component tests, and `npm run typecheck` for TypeScript validation.
+
+## Code organization and refactoring preferences
+
+- Keep each function at one level of abstraction. Workflow functions should call named steps; request construction, `fetch`, JSON decoding, validation, and state updates belong in focused functions rather than being interleaved with orchestration.
+- Keep HTTP transport separate from pure rules and UI. Forms receive an `onSubmit` callback; an Expo Router screen connects that callback to the API client. The form passes a successful session to `onAuthenticated` for session handling.
+- Put pure feature rules in feature directories such as `src/auth/` and visual components in `src/components/`. Organize by responsibility instead of adding folders solely to hold one file.
+- Use custom hooks for React stateful workflows. Functions inside a hook are appropriate when they need its form state, refs, or callbacks; move logic that needs none of those to a module-level pure function.
+- Keep `StyleSheet.create` beside a view when its styles are local to that view. Extract styles when multiple components share them or the view becomes hard to scan.
+- Follow the Red → Green → Refactor cycle in `AGENTS.md`. Complete and test each behavior slice before requesting review of the next slice.
