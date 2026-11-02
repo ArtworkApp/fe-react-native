@@ -17,6 +17,10 @@ export default function HomeScreen() {
           style={styles.button} onPress={() => router.push('/artworks')}>
           <Text style={styles.buttonText}>Browse Art</Text>
         </Pressable>
+        <Pressable accessibilityRole="button" accessibilityLabel="Sign in"
+          style={styles.signInButton} onPress={() => router.push('/login')}>
+          <Text style={styles.signInText}>Sign in</Text>
+        </Pressable>
       </View>
     </SafeAreaView>
   );
@@ -32,4 +36,7 @@ const styles = StyleSheet.create({
     borderRadius: 10, justifyContent: 'center', minHeight: 44, marginTop: 24,
     paddingHorizontal: 24 },
   buttonText: { color: '#fff', fontWeight: '600' },
+  signInButton: { alignItems: 'center', alignSelf: 'flex-start', justifyContent: 'center',
+    minHeight: 44, marginTop: 12, paddingHorizontal: 24 },
+  signInText: { color: '#1c1917', fontWeight: '600' },
 });
