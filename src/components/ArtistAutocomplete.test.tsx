@@ -14,37 +14,37 @@ test('searches names after a delay, selects an ID, and clears it', async () => {
   jest.useFakeTimers();
   mockedGetArtists.mockResolvedValue([{ id: '42', name: 'Claude Monet', country: 'France' }]);
   const onSelect = jest.fn();
-  render(<ArtistAutocomplete selected={null} onSelect={onSelect} />);
+  await render(<ArtistAutocomplete selected={null} onSelect={onSelect} />);
 
-  fireEvent.changeText(screen.getByLabelText('Artist'), 'Mon');
+  await fireEvent.changeText(screen.getByLabelText('Artist'), 'Mon');
   expect(mockedGetArtists).not.toHaveBeenCalled();
   expect(screen.getByText('Searching artists...')).toBeTruthy();
   expect(screen.queryByText('No artists found')).toBeNull();
   await act(async () => { jest.advanceTimersByTime(300); await Promise.resolve(); });
   expect(mockedGetArtists).toHaveBeenCalledWith(expect.objectContaining({ search: 'Mon' }));
   expect(screen.getByTestId('artist-results-scroll')).toBeTruthy();
-  fireEvent.press(screen.getByRole('button', { name: /Claude Monet/ }));
+  await fireEvent.press(screen.getByRole('button', { name: /Claude Monet/ }));
   expect(onSelect).toHaveBeenCalledWith({ id: '42', name: 'Claude Monet', country: 'France' });
 });
 
-test('shows a clear action for the selected artist', () => {
+test('shows a clear action for the selected artist', async () => {
   const onSelect = jest.fn();
-  render(<ArtistAutocomplete selected={{ id: '42', name: 'Claude Monet', country: 'France' }}
+  await render(<ArtistAutocomplete selected={{ id: '42', name: 'Claude Monet', country: 'France' }}
     onSelect={onSelect} />);
-  fireEvent.press(screen.getByRole('button', { name: 'Clear artist' }));
+  await fireEvent.press(screen.getByRole('button', { name: 'Clear artist' }));
   expect(onSelect).toHaveBeenCalledWith(null);
 });
 
 test('shows no results and a recoverable lookup failure', async () => {
   jest.useFakeTimers();
   mockedGetArtists.mockResolvedValueOnce([]).mockRejectedValueOnce(new Error('offline'));
-  render(<ArtistAutocomplete selected={null} onSelect={jest.fn()} />);
+  await render(<ArtistAutocomplete selected={null} onSelect={jest.fn()} />);
 
-  fireEvent.changeText(screen.getByLabelText('Artist'), 'ZZ');
+  await fireEvent.changeText(screen.getByLabelText('Artist'), 'ZZ');
   await act(async () => { jest.advanceTimersByTime(300); await Promise.resolve(); });
   expect(screen.getByText('No artists found')).toBeTruthy();
 
-  fireEvent.changeText(screen.getByLabelText('Artist'), 'Mon');
+  await fireEvent.changeText(screen.getByLabelText('Artist'), 'Mon');
   await act(async () => { jest.advanceTimersByTime(300); await Promise.resolve(); });
   expect(screen.getByText('Artist search failed.')).toBeTruthy();
   expect(screen.getByRole('button', { name: 'Retry artist search' })).toBeTruthy();
@@ -56,11 +56,11 @@ test('ignores a stale artist search response', async () => {
   mockedGetArtists.mockImplementationOnce(() => new Promise((resolve) => {
     finishFirstSearch = resolve;
   })).mockResolvedValueOnce([{ id: '2', name: 'Pablo Picasso', country: 'Spain' }]);
-  render(<ArtistAutocomplete selected={null} onSelect={jest.fn()} />);
+  await render(<ArtistAutocomplete selected={null} onSelect={jest.fn()} />);
 
-  fireEvent.changeText(screen.getByLabelText('Artist'), 'Mon');
+  await fireEvent.changeText(screen.getByLabelText('Artist'), 'Mon');
   await act(async () => { jest.advanceTimersByTime(300); });
-  fireEvent.changeText(screen.getByLabelText('Artist'), 'Pic');
+  await fireEvent.changeText(screen.getByLabelText('Artist'), 'Pic');
   await act(async () => { jest.advanceTimersByTime(300); await Promise.resolve(); });
   await act(async () => {
     finishFirstSearch([{ id: '1', name: 'Claude Monet', country: 'France' }]);

@@ -27,6 +27,6 @@ test('shows placeholders when metadata or the image is missing', async () => {
 
 test('falls back when an image fails', async () => {
   await render(<ArtworkCard artwork={artwork} />);
-  fireEvent(screen.getByLabelText('A blue painting'), 'error');
+  await fireEvent(screen.getByLabelText('A blue painting'), 'error');
   await waitFor(() => expect(screen.getByLabelText('Artwork image unavailable')).toBeTruthy());
 });

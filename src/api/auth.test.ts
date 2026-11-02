@@ -25,7 +25,7 @@ describe('mobile auth API', () => {
         accessToken: 'access.jwt',
         refreshToken: 'refresh.jwt',
       };
-      const fetchMock = jest.spyOn(global, 'fetch').mockResolvedValue({
+      const fetchMock = jest.spyOn(globalThis, 'fetch').mockResolvedValue({
         ok: true,
         json: async () => session,
       } as Response);
@@ -52,7 +52,7 @@ describe('mobile auth API', () => {
   );
 
   test('returns a stable API error without exposing submitted credentials', async () => {
-    jest.spyOn(global, 'fetch').mockResolvedValue({
+    jest.spyOn(globalThis, 'fetch').mockResolvedValue({
       ok: false,
       status: 401,
       json: async () => ({
@@ -70,7 +70,7 @@ describe('mobile auth API', () => {
   });
 
   test('rejects malformed successful responses', async () => {
-    jest.spyOn(global, 'fetch').mockResolvedValue({
+    jest.spyOn(globalThis, 'fetch').mockResolvedValue({
       ok: true,
       json: async () => ({ user: { id: 'one' } }),
     } as Response);
@@ -81,7 +81,7 @@ describe('mobile auth API', () => {
   });
 
   test('uses a safe error when the server error body is malformed', async () => {
-    jest.spyOn(global, 'fetch').mockResolvedValue({
+    jest.spyOn(globalThis, 'fetch').mockResolvedValue({
       ok: false,
       status: 500,
       json: async () => ({ unexpected: true }),
@@ -96,7 +96,7 @@ describe('mobile auth API', () => {
   });
 
   test('keeps valid field messages and ignores malformed field values', async () => {
-    jest.spyOn(global, 'fetch').mockResolvedValue({
+    jest.spyOn(globalThis, 'fetch').mockResolvedValue({
       ok: false,
       status: 400,
       json: async () => ({

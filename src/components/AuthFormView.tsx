@@ -109,7 +109,7 @@ export function AuthFormView({ mode, workflow }: AuthFormViewProps) {
             accessibilityRole="button"
             accessibilityLabel={title}
             disabled={workflow.isSubmitting}
-            onPress={workflow.submit}
+            onPress={() => { void workflow.submit(); }}
             style={[styles.button, workflow.isSubmitting && styles.disabled]}
           >
             <Text style={styles.buttonText}>
