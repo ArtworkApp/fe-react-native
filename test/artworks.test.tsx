@@ -37,7 +37,7 @@ test('shows a two-column artwork listing from the backend', async () => {
     ],
     pagination: { page: 1, limit: 21, total: 2, totalPages: 1 },
   });
-  render(<ArtworkListingScreen />);
+  await render(<ArtworkListingScreen />);
   await act(async () => { await Promise.resolve(); });
   expect(await screen.findByText('Blue Garden')).toBeTruthy();
   expect(screen.getByText('Red Garden')).toBeTruthy();
@@ -48,7 +48,7 @@ test('shows an empty catalog state', async () => {
   mockedGetArtworks.mockResolvedValue({ data: [], pagination: {
     page: 1, limit: 21, total: 0, totalPages: 0,
   } });
-  render(<ArtworkListingScreen />);
+  await render(<ArtworkListingScreen />);
   await act(async () => { await Promise.resolve(); });
   expect(await screen.findByText('No artworks available yet.')).toBeTruthy();
 });
@@ -57,9 +57,9 @@ test('retries an initial request failure', async () => {
   mockedGetArtworks.mockRejectedValueOnce(new Error('offline')).mockResolvedValueOnce({
     data: [], pagination: { page: 1, limit: 21, total: 0, totalPages: 0 },
   });
-  render(<ArtworkListingScreen />);
+  await render(<ArtworkListingScreen />);
   await act(async () => { await Promise.resolve(); });
-  await act(async () => { fireEvent.press(await screen.findByText('Retry')); });
+  await act(async () => { await fireEvent.press(await screen.findByText('Retry')); });
   await waitFor(() => expect(mockedGetArtworks).toHaveBeenCalledTimes(2));
   expect(await screen.findByText('No artworks available yet.')).toBeTruthy();
 });
@@ -68,11 +68,11 @@ test('changes sort and requests a fresh first page', async () => {
   mockedGetArtworks.mockResolvedValue({ data: [], pagination: {
     page: 1, limit: 21, total: 0, totalPages: 0,
   } });
-  render(<ArtworkListingScreen />);
+  await render(<ArtworkListingScreen />);
   await screen.findByText('No artworks available yet.');
 
-  fireEvent.press(screen.getByRole('button', { name: 'Sort artworks' }));
-  fireEvent.press(screen.getByRole('radio', { name: 'Price: Lowest First' }));
+  await fireEvent.press(screen.getByRole('button', { name: 'Sort artworks' }));
+  await fireEvent.press(screen.getByRole('radio', { name: 'Price: Lowest First' }));
 
   await waitFor(() => expect(mockedGetArtworks).toHaveBeenCalledTimes(2));
   expect(mockedGetArtworks).toHaveBeenLastCalledWith(expect.objectContaining({
@@ -84,18 +84,18 @@ test('applies year filters and clears a filtered empty state', async () => {
   mockedGetArtworks.mockResolvedValue({ data: [], pagination: {
     page: 1, limit: 21, total: 0, totalPages: 0,
   } });
-  render(<ArtworkListingScreen />);
+  await render(<ArtworkListingScreen />);
   await screen.findByText('No artworks available yet.');
 
-  fireEvent.press(screen.getByRole('button', { name: 'Filter artworks' }));
-  fireEvent.changeText(screen.getByLabelText('From'), '1900');
-  fireEvent.press(screen.getByRole('button', { name: 'Apply Filters' }));
+  await fireEvent.press(screen.getByRole('button', { name: 'Filter artworks' }));
+  await fireEvent.changeText(screen.getByLabelText('From'), '1900');
+  await fireEvent.press(screen.getByRole('button', { name: 'Apply Filters' }));
 
   expect(await screen.findByText('No artworks found.')).toBeTruthy();
   expect(mockedGetArtworks).toHaveBeenLastCalledWith(expect.objectContaining({
     filters: { yearStart: 1900 }, sort: 'year_desc',
   }));
-  fireEvent.press(screen.getByRole('button', { name: 'Clear Filters' }));
+  await fireEvent.press(screen.getByRole('button', { name: 'Clear Filters' }));
   await waitFor(() => expect(mockedGetArtworks).toHaveBeenCalledTimes(3));
   expect(await screen.findByText('No artworks available yet.')).toBeTruthy();
 });
@@ -105,16 +105,16 @@ test('applies a selected artist ID to the listing request', async () => {
     page: 1, limit: 21, total: 0, totalPages: 0,
   } });
   mockedGetArtists.mockResolvedValue([{ id: '42', name: 'Claude Monet', country: 'France' }]);
-  render(<ArtworkListingScreen />);
+  await render(<ArtworkListingScreen />);
   await screen.findByText('No artworks available yet.');
 
   jest.useFakeTimers();
-  fireEvent.press(screen.getByRole('button', { name: 'Filter artworks' }));
-  fireEvent.changeText(screen.getByLabelText('Artist'), 'Mon');
+  await fireEvent.press(screen.getByRole('button', { name: 'Filter artworks' }));
+  await fireEvent.changeText(screen.getByLabelText('Artist'), 'Mon');
   await act(async () => { jest.advanceTimersByTime(300); await Promise.resolve(); });
-  fireEvent.press(screen.getByRole('button', { name: /Claude Monet/ }));
+  await fireEvent.press(screen.getByRole('button', { name: /Claude Monet/ }));
   await act(async () => {
-    fireEvent.press(screen.getByRole('button', { name: 'Apply Filters' }));
+    await fireEvent.press(screen.getByRole('button', { name: 'Apply Filters' }));
     await Promise.resolve();
   });
 
@@ -130,14 +130,14 @@ test('applies selected artwork type and materials to the listing request', async
   mockedGetArtworkTypes.mockResolvedValue([{ id: '1', name: 'Painting', active: true }]);
   mockedGetMaterials.mockResolvedValue([{ id: '2', name: 'Oil', active: true,
     artworkTypeId: '1', artworkType: null }]);
-  render(<ArtworkListingScreen />);
+  await render(<ArtworkListingScreen />);
   await screen.findByText('No artworks available yet.');
 
-  fireEvent.press(screen.getByRole('button', { name: 'Filter artworks' }));
-  fireEvent.press(await screen.findByRole('radio', { name: 'Artwork type: Painting' }));
-  fireEvent.press(screen.getByRole('checkbox', { name: 'Material: Oil' }));
+  await fireEvent.press(screen.getByRole('button', { name: 'Filter artworks' }));
+  await fireEvent.press(await screen.findByRole('radio', { name: 'Artwork type: Painting' }));
+  await fireEvent.press(screen.getByRole('checkbox', { name: 'Material: Oil' }));
   await act(async () => {
-    fireEvent.press(screen.getByRole('button', { name: 'Apply Filters' }));
+    await fireEvent.press(screen.getByRole('button', { name: 'Apply Filters' }));
     await Promise.resolve();
   });
 
@@ -150,14 +150,14 @@ test('applies a selected country to the listing request', async () => {
   mockedGetArtworks.mockResolvedValue({ data: [], pagination: {
     page: 1, limit: 21, total: 0, totalPages: 0,
   } });
-  render(<ArtworkListingScreen />);
+  await render(<ArtworkListingScreen />);
   await screen.findByText('No artworks available yet.');
 
-  fireEvent.press(screen.getByRole('button', { name: 'Filter artworks' }));
-  fireEvent.changeText(screen.getByLabelText('Artist country'), 'fra');
-  fireEvent.press(screen.getByRole('button', { name: 'France' }));
+  await fireEvent.press(screen.getByRole('button', { name: 'Filter artworks' }));
+  await fireEvent.changeText(screen.getByLabelText('Artist country'), 'fra');
+  await fireEvent.press(screen.getByRole('button', { name: 'France' }));
   await act(async () => {
-    fireEvent.press(screen.getByRole('button', { name: 'Apply Filters' }));
+    await fireEvent.press(screen.getByRole('button', { name: 'Apply Filters' }));
     await Promise.resolve();
   });
 

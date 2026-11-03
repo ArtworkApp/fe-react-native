@@ -3,7 +3,7 @@ import { getArtists } from './artists';
 test('searches the backend for at most 21 artists', async () => {
   process.env.EXPO_PUBLIC_API_URL = 'http://192.168.1.8:3001/api/v1';
   const response = { data: [{ id: '42', name: 'Claude Monet', country: 'France' }] };
-  const fetchMock = jest.spyOn(global, 'fetch').mockResolvedValue({
+  const fetchMock = jest.spyOn(globalThis, 'fetch').mockResolvedValue({
     ok: true, json: async () => response,
   } as Response);
 

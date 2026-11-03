@@ -9,16 +9,24 @@ jest.mock('expo-router', () => ({
 
 afterEach(() => mockPush.mockClear());
 
-test('home opens the artwork listing route', () => {
-  render(<HomeScreen />);
+test('home opens the artwork listing route', async () => {
+  await render(<HomeScreen />);
 
-  fireEvent.press(screen.getByRole('button', { name: 'Browse Art' }));
+  await fireEvent.press(screen.getByRole('button', { name: 'Browse Art' }));
 
   expect(mockPush).toHaveBeenCalledWith('/artworks');
 });
 
-test('home does not fetch artworks', () => {
-  render(<HomeScreen />);
+test('home opens the sign-in route', async () => {
+  await render(<HomeScreen />);
+
+  await fireEvent.press(screen.getByRole('button', { name: 'Sign in' }));
+
+  expect(mockPush).toHaveBeenCalledWith('/login');
+});
+
+test('home does not fetch artworks', async () => {
+  await render(<HomeScreen />);
 
   expect(screen.queryByTestId('artwork-grid')).toBeNull();
 });
