@@ -14,7 +14,15 @@ export function AuthRoute({ mode }: { mode: AuthMode }) {
 
   function completeAuthentication(session: MobileSession): void {
     acceptSession(session);
-    router.replace('/account');
+    returnToPreviousScreen();
+  }
+
+  function returnToPreviousScreen(): void {
+    if (router.canGoBack()) {
+      router.back();
+    } else {
+      router.replace('/');
+    }
   }
 
   return (

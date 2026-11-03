@@ -6,10 +6,12 @@ import LoginScreen from '../src/app/(auth)/login';
 import RegisterScreen from '../src/app/(auth)/register';
 
 const mockReplace = jest.fn();
+const mockBack = jest.fn();
+const mockCanGoBack = jest.fn();
 
 jest.mock('expo-router', () => ({
   ...jest.requireActual('expo-router'),
-  useRouter: () => ({ replace: mockReplace }),
+  useRouter: () => ({ replace: mockReplace, back: mockBack, canGoBack: mockCanGoBack }),
 }));
 jest.mock('../src/api/auth', () => ({
   ...jest.requireActual('../src/api/auth'),
@@ -36,9 +38,11 @@ function UserProbe() {
 beforeEach(() => {
   mockAuthenticate.mockReset();
   mockReplace.mockReset();
+  mockBack.mockReset();
+  mockCanGoBack.mockReset().mockReturnValue(true);
 });
 
-test('login accepts the mobile session and opens the private destination', async () => {
+test('login accepts the mobile session and returns to the previous screen', async () => {
   mockAuthenticate.mockResolvedValue(session);
   await render(<AuthSessionProvider><LoginScreen /><UserProbe /></AuthSessionProvider>);
 
@@ -51,10 +55,10 @@ test('login accepts the mobile session and opens the private destination', async
     password: 'long-example-password',
   }));
   await waitFor(() => expect(screen.getByText('person@example.com')).toBeTruthy());
-  expect(mockReplace).toHaveBeenCalledWith('/account');
+  await waitFor(() => expect(mockBack).toHaveBeenCalledTimes(1));
 });
 
-test('registration uses the register operation and keeps tokens out of navigation', async () => {
+test('registration returns to the previous screen', async () => {
   mockAuthenticate.mockResolvedValue(session);
   await render(<AuthSessionProvider><RegisterScreen /></AuthSessionProvider>);
 
@@ -67,5 +71,15 @@ test('registration uses the register operation and keeps tokens out of navigatio
     email: 'person@example.com',
     password: 'long-example-password',
   }));
-  await waitFor(() => expect(mockReplace).toHaveBeenCalledWith('/account'));
+  await waitFor(() => expect(mockBack).toHaveBeenCalledTimes(1));
+});
+
+test('falls back to the home screen when there is no previous screen', async () => {
+  mockCanGoBack.mockReturnValue(false);
+  mockAuthenticate.mockResolvedValue(session);
+  await render(<AuthSessionProvider><LoginScreen /></AuthSessionProvider>);
+  await fireEvent.changeText(screen.getByLabelText('Email'), 'person@example.com');
+  await fireEvent.changeText(screen.getByLabelText('Password'), 'long-example-password');
+  await fireEvent.press(screen.getByRole('button', { name: 'Sign in' }));
+  await waitFor(() => expect(mockReplace).toHaveBeenCalledWith('/'));
 });
