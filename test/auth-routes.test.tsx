@@ -22,6 +22,7 @@ jest.mock('../src/auth/session-storage', () => ({
   saveTokens: jest.fn().mockResolvedValue(undefined),
   clearTokens: jest.fn().mockResolvedValue(undefined),
 }));
+jest.mock('../src/auth/restore-session', () => ({ restoreSession: jest.fn().mockResolvedValue({ state: 'anonymous' }) }));
 
 const mockAuthenticate = authenticate as jest.MockedFunction<typeof authenticate>;
 const session = {

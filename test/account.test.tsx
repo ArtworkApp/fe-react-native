@@ -15,8 +15,26 @@ beforeEach(() => {
   mockRedirect.mockClear();
 });
 
+test('keeps private content hidden while the session is being restored', async () => {
+  mockUseAuthSession.mockReturnValue({ user: null, acceptSession: jest.fn(), signOut: jest.fn(),
+    signOutWarning: '', restorationState: 'loading', retryRestoration: jest.fn() });
+  await render(<AccountScreen />);
+  expect(screen.getByText('Checking session…')).toBeTruthy();
+  expect(mockRedirect).not.toHaveBeenCalled();
+});
+
+test('offers a retry when restoration cannot reach the server', async () => {
+  const retryRestoration = jest.fn();
+  mockUseAuthSession.mockReturnValue({ user: null, acceptSession: jest.fn(), signOut: jest.fn(),
+    signOutWarning: '', restorationState: 'retry', retryRestoration });
+  await render(<AccountScreen />);
+  await fireEvent.press(screen.getByRole('button', { name: 'Retry session' }));
+  expect(retryRestoration).toHaveBeenCalledTimes(1);
+  expect(mockRedirect).not.toHaveBeenCalled();
+});
+
 test('anonymous users cannot view the account screen', async () => {
-  mockUseAuthSession.mockReturnValue({ user: null, acceptSession: jest.fn(), signOut: jest.fn(), signOutWarning: '' });
+  mockUseAuthSession.mockReturnValue({ user: null, acceptSession: jest.fn(), signOut: jest.fn(), signOutWarning: '', restorationState: 'ready', retryRestoration: jest.fn() });
 
   await render(<AccountScreen />);
 
@@ -39,6 +57,8 @@ test('authenticated users see their public profile', async () => {
     acceptSession: jest.fn(),
     signOut,
     signOutWarning: '',
+    restorationState: 'ready',
+    retryRestoration: jest.fn(),
   });
 
   await render(<AccountScreen />);

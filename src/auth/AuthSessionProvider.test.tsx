@@ -5,6 +5,7 @@ import { AuthSessionProvider, useAuthSession } from './AuthSessionProvider';
 import { clearTokens, saveTokens } from './session-storage';
 
 jest.mock('./session-storage', () => ({ saveTokens: jest.fn(), clearTokens: jest.fn() }));
+jest.mock('./restore-session', () => ({ restoreSession: jest.fn().mockResolvedValue({ state: 'anonymous' }) }));
 
 beforeEach(() => {
   jest.mocked(saveTokens).mockReset().mockResolvedValue(undefined);

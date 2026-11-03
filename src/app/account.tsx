@@ -5,7 +5,13 @@ import { useAuthSession } from '../auth/AuthSessionProvider';
 
 export default function AccountScreen() {
   const router = useRouter();
-  const { user, signOut } = useAuthSession();
+  const { user, signOut, restorationState, retryRestoration } = useAuthSession();
+  if (restorationState === 'loading') return <Text>Checking session…</Text>;
+  if (restorationState === 'retry') {
+    return <Pressable accessibilityRole="button" onPress={retryRestoration}>
+      <Text>Retry session</Text>
+    </Pressable>;
+  }
   if (!user) return <Redirect href="/login" />;
 
   function handleSignOut(): void {

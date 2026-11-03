@@ -4,7 +4,13 @@ import { useAuthSession } from '../auth/AuthSessionProvider';
 
 export function AccountAction() {
   const router = useRouter();
-  const { user } = useAuthSession();
+  const { user, restorationState, retryRestoration } = useAuthSession();
+  if (restorationState === 'loading') return <Text style={styles.text}>Checking…</Text>;
+  if (restorationState === 'retry') {
+    return <Pressable accessibilityRole="button" onPress={retryRestoration} style={styles.button}>
+      <Text style={styles.text}>Retry session</Text>
+    </Pressable>;
+  }
   const label = user ? 'Profile' : 'Sign in';
 
   function openAccount(): void {
