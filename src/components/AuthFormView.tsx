@@ -116,7 +116,7 @@ export function AuthFormView({ mode, workflow }: AuthFormViewProps) {
               {workflow.isSubmitting ? 'Please wait…' : title}
             </Text>
           </Pressable>
-          <Link href={isRegister ? '/(auth)/login' : '/(auth)/register'} style={styles.link}>
+          <Link replace href={isRegister ? '/(auth)/login' : '/(auth)/register'} style={styles.link}>
             {isRegister ? 'Already have an account? Sign in' : 'New here? Create an account'}
           </Link>
         </ScrollView>
