@@ -1,9 +1,10 @@
-import { render, screen } from '@testing-library/react-native';
+import { fireEvent, render, screen } from '@testing-library/react-native';
 import { Redirect } from 'expo-router';
 import { useAuthSession } from '../src/auth/AuthSessionProvider';
 import AccountScreen from '../src/app/account';
 
-jest.mock('expo-router', () => ({ Redirect: jest.fn(() => null) }));
+const mockReplace = jest.fn();
+jest.mock('expo-router', () => ({ Redirect: jest.fn(() => null), useRouter: () => ({ replace: mockReplace }) }));
 jest.mock('../src/auth/AuthSessionProvider', () => ({ useAuthSession: jest.fn() }));
 
 const mockUseAuthSession = useAuthSession as jest.MockedFunction<typeof useAuthSession>;
@@ -15,7 +16,7 @@ beforeEach(() => {
 });
 
 test('anonymous users cannot view the account screen', async () => {
-  mockUseAuthSession.mockReturnValue({ user: null, acceptSession: jest.fn() });
+  mockUseAuthSession.mockReturnValue({ user: null, acceptSession: jest.fn(), signOut: jest.fn(), signOutWarning: '' });
 
   await render(<AccountScreen />);
 
@@ -27,6 +28,7 @@ test('anonymous users cannot view the account screen', async () => {
 });
 
 test('authenticated users see their public profile', async () => {
+  const signOut = jest.fn().mockResolvedValue(undefined);
   mockUseAuthSession.mockReturnValue({
     user: {
       id: '8d15334b-61d2-4aca-99b8-d633523d098b',
@@ -35,10 +37,15 @@ test('authenticated users see their public profile', async () => {
       avatarUrl: null,
     },
     acceptSession: jest.fn(),
+    signOut,
+    signOutWarning: '',
   });
 
   await render(<AccountScreen />);
 
   expect(screen.getByText('person@example.com')).toBeTruthy();
+  await fireEvent.press(screen.getByRole('button', { name: 'Sign out' }));
+  expect(signOut).toHaveBeenCalled();
+  expect(mockReplace).toHaveBeenCalledWith('/');
   expect(mockRedirect).not.toHaveBeenCalled();
 });
