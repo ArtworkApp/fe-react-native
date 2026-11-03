@@ -1,5 +1,5 @@
 import * as SecureStore from 'expo-secure-store';
-import { clearTokens, loadTokens, saveTokens } from './session-storage';
+import { clearTokens, loadTokens, markRefreshPending, saveTokens } from './session-storage';
 
 jest.mock('expo-secure-store', () => ({
   getItemAsync: jest.fn(),
@@ -41,4 +41,13 @@ test('clears any partial credentials when saving fails', async () => {
   jest.mocked(SecureStore.setItemAsync).mockRejectedValue(new Error('Storage unavailable'));
   await expect(saveTokens(tokens)).rejects.toThrow('Storage unavailable');
   expect(SecureStore.deleteItemAsync).toHaveBeenCalledTimes(1);
+});
+
+test('stores a pending refresh marker with the token pair', async () => {
+  await markRefreshPending(tokens);
+  expect(SecureStore.setItemAsync).toHaveBeenCalledWith(expect.any(String), JSON.stringify({
+    ...tokens, refreshPending: true,
+  }));
+  jest.mocked(SecureStore.getItemAsync).mockResolvedValue(JSON.stringify({ ...tokens, refreshPending: true }));
+  await expect(loadTokens()).resolves.toEqual({ ...tokens, refreshPending: true });
 });

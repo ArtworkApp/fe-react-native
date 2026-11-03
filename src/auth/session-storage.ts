@@ -5,6 +5,7 @@ const tokenKey = 'artworkapp.session.tokens';
 const tokenSchema = z.object({
   accessToken: z.string().min(1),
   refreshToken: z.string().min(1),
+  refreshPending: z.boolean().optional(),
 });
 
 export type SessionTokens = z.infer<typeof tokenSchema>;
@@ -29,6 +30,10 @@ export async function saveTokens(tokens: SessionTokens): Promise<void> {
     await clearTokens();
     throw error;
   }
+}
+
+export async function markRefreshPending(tokens: SessionTokens): Promise<void> {
+  await SecureStore.setItemAsync(tokenKey, JSON.stringify({ ...tokens, refreshPending: true }));
 }
 
 export async function loadTokens(): Promise<SessionTokens | null> {

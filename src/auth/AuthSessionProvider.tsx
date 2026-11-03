@@ -35,6 +35,9 @@ export function AuthSessionProvider({ children }: { children: ReactNode }) {
         setRestorationState('retry');
         return;
       }
+      if (result.state === 'uncertain') {
+        setSignOutWarning('Your session could not be restored. Please sign in again.');
+      }
       setCurrentSession(result.state === 'authenticated' ? result.session : null);
       setRestorationState('ready');
     }).catch(() => {

@@ -12,12 +12,12 @@ const session = {
 };
 
 function StartupProbe() {
-  const { user, restorationState, retryRestoration } = useAuthSession();
+  const { user, restorationState, retryRestoration, signOutWarning } = useAuthSession();
   if (restorationState === 'loading') return <Text>Checking session</Text>;
   if (restorationState === 'retry') {
     return <Pressable accessibilityRole="button" onPress={retryRestoration}><Text>Retry session</Text></Pressable>;
   }
-  return <Text>{user?.email ?? 'Signed out'}</Text>;
+  return <><Text>{user?.email ?? 'Signed out'}</Text>{signOutWarning ? <Text>{signOutWarning}</Text> : null}</>;
 }
 
 beforeEach(() => jest.mocked(restoreSession).mockReset());
@@ -46,4 +46,11 @@ test('shows signed out when no session can be restored', async () => {
   jest.mocked(restoreSession).mockResolvedValue({ state: 'anonymous' });
   await render(<AuthSessionProvider><StartupProbe /></AuthSessionProvider>);
   expect(await screen.findByText('Signed out')).toBeTruthy();
+});
+
+test('asks for sign-in when a refresh outcome is uncertain', async () => {
+  jest.mocked(restoreSession).mockResolvedValue({ state: 'uncertain' });
+  await render(<AuthSessionProvider><StartupProbe /></AuthSessionProvider>);
+  expect(await screen.findByText('Your session could not be restored. Please sign in again.')).toBeTruthy();
+  expect(screen.getByText('Signed out')).toBeTruthy();
 });
