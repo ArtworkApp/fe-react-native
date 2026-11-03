@@ -12,8 +12,8 @@ export function AuthRoute({ mode }: { mode: AuthMode }) {
     return authenticate(mode, credentials);
   }
 
-  function completeAuthentication(session: MobileSession): void {
-    acceptSession(session);
+  async function completeAuthentication(session: MobileSession): Promise<void> {
+    await acceptSession(session);
     returnToPreviousScreen();
   }
 

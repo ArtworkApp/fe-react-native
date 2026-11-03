@@ -8,6 +8,10 @@ const mockPush = jest.fn();
 jest.mock('expo-router', () => ({
   useRouter: () => ({ push: mockPush }),
 }));
+jest.mock('../src/auth/session-storage', () => ({
+  saveTokens: jest.fn().mockResolvedValue(undefined),
+  clearTokens: jest.fn().mockResolvedValue(undefined),
+}));
 
 afterEach(() => mockPush.mockClear());
 

@@ -4,6 +4,7 @@ import { authenticate } from '../src/api/auth';
 import { AuthSessionProvider, useAuthSession } from '../src/auth/AuthSessionProvider';
 import LoginScreen from '../src/app/(auth)/login';
 import RegisterScreen from '../src/app/(auth)/register';
+import { saveTokens } from '../src/auth/session-storage';
 
 const mockReplace = jest.fn();
 const mockBack = jest.fn();
@@ -16,6 +17,10 @@ jest.mock('expo-router', () => ({
 jest.mock('../src/api/auth', () => ({
   ...jest.requireActual('../src/api/auth'),
   authenticate: jest.fn(),
+}));
+jest.mock('../src/auth/session-storage', () => ({
+  saveTokens: jest.fn().mockResolvedValue(undefined),
+  clearTokens: jest.fn().mockResolvedValue(undefined),
 }));
 
 const mockAuthenticate = authenticate as jest.MockedFunction<typeof authenticate>;
@@ -40,6 +45,20 @@ beforeEach(() => {
   mockReplace.mockReset();
   mockBack.mockReset();
   mockCanGoBack.mockReset().mockReturnValue(true);
+  jest.mocked(saveTokens).mockReset().mockResolvedValue(undefined);
+});
+
+test('does not navigate or authenticate locally when secure storage fails', async () => {
+  mockAuthenticate.mockResolvedValue(session);
+  jest.mocked(saveTokens).mockRejectedValue(new Error('Storage unavailable'));
+  await render(<AuthSessionProvider><LoginScreen /><UserProbe /></AuthSessionProvider>);
+  await fireEvent.changeText(screen.getByLabelText('Email'), 'person@example.com');
+  await fireEvent.changeText(screen.getByLabelText('Password'), 'long-example-password');
+  await fireEvent.press(screen.getByRole('button', { name: 'Sign in' }));
+  await waitFor(() => expect(screen.getByText('Unable to connect. Please try again.')).toBeTruthy());
+  expect(screen.getByText('Signed out')).toBeTruthy();
+  expect(mockBack).not.toHaveBeenCalled();
+  expect(mockReplace).not.toHaveBeenCalled();
 });
 
 test('login accepts the mobile session and returns to the previous screen', async () => {

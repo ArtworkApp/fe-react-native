@@ -2,6 +2,14 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react-nativ
 import { Pressable, Text } from 'react-native';
 import type { MobileSession } from '../api/auth';
 import { AuthSessionProvider, useAuthSession } from './AuthSessionProvider';
+import { clearTokens, saveTokens } from './session-storage';
+
+jest.mock('./session-storage', () => ({ saveTokens: jest.fn(), clearTokens: jest.fn() }));
+
+beforeEach(() => {
+  jest.mocked(saveTokens).mockReset().mockResolvedValue(undefined);
+  jest.mocked(clearTokens).mockReset().mockResolvedValue(undefined);
+});
 
 const session: MobileSession = {
   user: {
@@ -37,6 +45,7 @@ test('keeps a successful mobile session in memory for route handoff', async () =
 
   expect(screen.getByText('Signed out')).toBeTruthy();
   await fireEvent.press(screen.getByRole('button', { name: 'Accept session' }));
+  expect(saveTokens).toHaveBeenCalledWith({ accessToken: 'access.jwt', refreshToken: 'refresh.jwt' });
   expect(screen.getByText('person@example.com')).toBeTruthy();
 });
 
@@ -47,6 +56,7 @@ test('sign-out clears the session and revokes the refresh token', async () => {
   await fireEvent.press(screen.getByRole('button', { name: 'Accept session' }));
   await fireEvent.press(screen.getByRole('button', { name: 'Sign out' }));
   expect(screen.getByText('Signed out')).toBeTruthy();
+  expect(clearTokens).toHaveBeenCalledTimes(1);
   expect(request).toHaveBeenCalledWith(expect.stringContaining('/auth/logout'), expect.objectContaining({
     method: 'POST', body: JSON.stringify({ refreshToken: 'refresh.jwt' }),
   }));
@@ -60,6 +70,20 @@ test('warns when the server cannot confirm sign-out', async () => {
   await fireEvent.press(screen.getByRole('button', { name: 'Accept session' }));
   await fireEvent.press(screen.getByRole('button', { name: 'Sign out' }));
   await waitFor(() => expect(screen.getByText('Could not confirm sign-out with the server.')).toBeTruthy());
+  expect(screen.getByText('Signed out')).toBeTruthy();
+  expect(clearTokens).toHaveBeenCalledTimes(1);
+  request.mockRestore();
+});
+
+test('still requests revocation and warns if secure deletion fails', async () => {
+  process.env.EXPO_PUBLIC_API_URL = 'http://192.168.1.8:3001/api/v1';
+  jest.mocked(clearTokens).mockRejectedValue(new Error('Storage unavailable'));
+  const request = jest.spyOn(globalThis, 'fetch').mockResolvedValue({ ok: true, status: 204 } as Response);
+  await render(<AuthSessionProvider><SessionProbe /></AuthSessionProvider>);
+  await fireEvent.press(screen.getByRole('button', { name: 'Accept session' }));
+  await fireEvent.press(screen.getByRole('button', { name: 'Sign out' }));
+  await waitFor(() => expect(screen.getByText('Could not remove saved credentials from this device.')).toBeTruthy());
+  expect(request).toHaveBeenCalledTimes(1);
   expect(screen.getByText('Signed out')).toBeTruthy();
   request.mockRestore();
 });

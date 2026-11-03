@@ -1,10 +1,11 @@
 import { createContext, useContext, useState, type ReactNode } from 'react';
 import type { MobileSession, UserProfile } from '../api/auth';
 import { revokeSession } from '../api/logout';
+import { clearTokens, saveTokens } from './session-storage';
 
 interface AuthSessionContextValue {
   user: UserProfile | null;
-  acceptSession: (session: MobileSession) => void;
+  acceptSession: (session: MobileSession) => Promise<void>;
   signOut: () => Promise<void>;
   signOutWarning: string;
 }
@@ -19,6 +20,12 @@ export function AuthSessionProvider({ children }: { children: ReactNode }) {
     if (!currentSession) return;
     setCurrentSession(null);
     setSignOutWarning('');
+    let storageCleared = true;
+    try {
+      await clearTokens();
+    } catch {
+      storageCleared = false;
+    }
     try {
       if (!await revokeSession(currentSession.refreshToken)) {
         setSignOutWarning('Could not confirm sign-out with the server.');
@@ -26,9 +33,11 @@ export function AuthSessionProvider({ children }: { children: ReactNode }) {
     } catch {
       setSignOutWarning('Could not confirm sign-out with the server.');
     }
+    if (!storageCleared) setSignOutWarning('Could not remove saved credentials from this device.');
   }
 
-  function acceptSession(session: MobileSession): void {
+  async function acceptSession(session: MobileSession): Promise<void> {
+    await saveTokens({ accessToken: session.accessToken, refreshToken: session.refreshToken });
     setSignOutWarning('');
     setCurrentSession(session);
   }
