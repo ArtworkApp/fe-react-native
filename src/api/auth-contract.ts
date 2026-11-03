@@ -47,7 +47,7 @@ export class AuthApiError extends Error {
   }
 }
 
-const userProfileSchema = z.object({
+export const userProfileSchema = z.object({
   id: z.string(),
   email: z.string(),
   displayName: z.string().nullable(),
