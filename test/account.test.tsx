@@ -17,7 +17,7 @@ beforeEach(() => {
 
 test('keeps private content hidden while the session is being restored', async () => {
   mockUseAuthSession.mockReturnValue({ user: null, acceptSession: jest.fn(), signOut: jest.fn(),
-    signOutWarning: '', restorationState: 'loading', retryRestoration: jest.fn() });
+    signOutWarning: '', restorationState: 'loading', retryRestoration: jest.fn(), authenticatedFetch: jest.fn() });
   await render(<AccountScreen />);
   expect(screen.getByText('Checking session…')).toBeTruthy();
   expect(mockRedirect).not.toHaveBeenCalled();
@@ -26,7 +26,7 @@ test('keeps private content hidden while the session is being restored', async (
 test('offers a retry when restoration cannot reach the server', async () => {
   const retryRestoration = jest.fn();
   mockUseAuthSession.mockReturnValue({ user: null, acceptSession: jest.fn(), signOut: jest.fn(),
-    signOutWarning: '', restorationState: 'retry', retryRestoration });
+    signOutWarning: '', restorationState: 'retry', retryRestoration, authenticatedFetch: jest.fn() });
   await render(<AccountScreen />);
   await fireEvent.press(screen.getByRole('button', { name: 'Retry session' }));
   expect(retryRestoration).toHaveBeenCalledTimes(1);
@@ -34,7 +34,7 @@ test('offers a retry when restoration cannot reach the server', async () => {
 });
 
 test('anonymous users cannot view the account screen', async () => {
-  mockUseAuthSession.mockReturnValue({ user: null, acceptSession: jest.fn(), signOut: jest.fn(), signOutWarning: '', restorationState: 'ready', retryRestoration: jest.fn() });
+  mockUseAuthSession.mockReturnValue({ user: null, acceptSession: jest.fn(), signOut: jest.fn(), signOutWarning: '', restorationState: 'ready', retryRestoration: jest.fn(), authenticatedFetch: jest.fn() });
 
   await render(<AccountScreen />);
 
@@ -59,6 +59,7 @@ test('authenticated users see their public profile', async () => {
     signOutWarning: '',
     restorationState: 'ready',
     retryRestoration: jest.fn(),
+    authenticatedFetch: jest.fn(),
   });
 
   await render(<AccountScreen />);
