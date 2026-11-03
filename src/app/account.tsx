@@ -16,6 +16,7 @@ export default function AccountScreen() {
 
   function handleSignOut(): void {
     void signOut();
+    if (router.canDismiss()) router.dismissAll();
     router.replace('/');
   }
 

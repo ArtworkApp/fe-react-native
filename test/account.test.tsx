@@ -4,7 +4,11 @@ import { useAuthSession } from '../src/auth/AuthSessionProvider';
 import AccountScreen from '../src/app/account';
 
 const mockReplace = jest.fn();
-jest.mock('expo-router', () => ({ Redirect: jest.fn(() => null), useRouter: () => ({ replace: mockReplace }) }));
+const mockDismissAll = jest.fn();
+const mockCanDismiss = jest.fn();
+jest.mock('expo-router', () => ({ Redirect: jest.fn(() => null), useRouter: () => ({
+  replace: mockReplace, dismissAll: mockDismissAll, canDismiss: mockCanDismiss,
+}) }));
 jest.mock('../src/auth/AuthSessionProvider', () => ({ useAuthSession: jest.fn() }));
 
 const mockUseAuthSession = useAuthSession as jest.MockedFunction<typeof useAuthSession>;
@@ -13,6 +17,9 @@ const mockRedirect = Redirect as jest.MockedFunction<typeof Redirect>;
 beforeEach(() => {
   mockUseAuthSession.mockReset();
   mockRedirect.mockClear();
+  mockReplace.mockClear();
+  mockDismissAll.mockClear();
+  mockCanDismiss.mockReset().mockReturnValue(true);
 });
 
 test('keeps private content hidden while the session is being restored', async () => {
@@ -67,6 +74,22 @@ test('authenticated users see their public profile', async () => {
   expect(screen.getByText('person@example.com')).toBeTruthy();
   await fireEvent.press(screen.getByRole('button', { name: 'Sign out' }));
   expect(signOut).toHaveBeenCalled();
+  expect(mockDismissAll).toHaveBeenCalledTimes(1);
   expect(mockReplace).toHaveBeenCalledWith('/');
+  expect(mockDismissAll.mock.invocationCallOrder[0]).toBeLessThan(mockReplace.mock.invocationCallOrder[0]);
   expect(mockRedirect).not.toHaveBeenCalled();
+});
+
+test('signs out safely when there is no navigation history', async () => {
+  mockCanDismiss.mockReturnValue(false);
+  const signOut = jest.fn().mockResolvedValue(undefined);
+  mockUseAuthSession.mockReturnValue({
+    user: { id: 'user-1', email: 'person@example.com', displayName: null, avatarUrl: null },
+    acceptSession: jest.fn(), signOut, signOutWarning: '', restorationState: 'ready',
+    retryRestoration: jest.fn(), authenticatedFetch: jest.fn(),
+  });
+  await render(<AccountScreen />);
+  await fireEvent.press(screen.getByRole('button', { name: 'Sign out' }));
+  expect(mockDismissAll).not.toHaveBeenCalled();
+  expect(mockReplace).toHaveBeenCalledWith('/');
 });
