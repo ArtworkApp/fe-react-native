@@ -27,7 +27,11 @@ export async function saveTokens(tokens: SessionTokens): Promise<void> {
   try {
     await SecureStore.setItemAsync(tokenKey, JSON.stringify(tokens));
   } catch (error) {
-    await clearTokens();
+    try {
+      await clearTokens();
+    } catch {
+      // Ignore cleanup failure so the original write error is preserved.
+    }
     throw error;
   }
 }
