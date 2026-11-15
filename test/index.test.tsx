@@ -49,6 +49,7 @@ test('home does not fetch artworks', async () => {
 test('shows profile instead of sign in for an authenticated user', async () => {
   await render(<AuthSessionProvider><SignedInHome /></AuthSessionProvider>);
   await fireEvent.press(screen.getByLabelText('Set session'));
+  await screen.findByRole('button', { name: 'Profile' });
   expect(screen.queryByRole('button', { name: 'Sign in' })).toBeNull();
   await fireEvent.press(screen.getByRole('button', { name: 'Profile' }));
   expect(mockPush).toHaveBeenCalledWith('/account');
