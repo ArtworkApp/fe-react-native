@@ -47,7 +47,7 @@ export class AuthApiError extends Error {
   }
 }
 
-const userProfileSchema = z.object({
+export const userProfileSchema = z.object({
   id: z.string(),
   email: z.string(),
   displayName: z.string().nullable(),
@@ -71,7 +71,7 @@ const errorBodySchema = z
   .transform(({ error }) => error)
   .catch({ code: 'REQUEST_FAILED', message: 'Unable to sign in right now.' });
 
-function parseMobileSession(body: unknown): MobileSession {
+export function parseMobileSession(body: unknown): MobileSession {
   const result = mobileSessionSchema.safeParse(body);
   if (!result.success) throw new Error('Invalid authentication response.');
   return result.data;
