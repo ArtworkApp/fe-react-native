@@ -94,11 +94,17 @@ export function AuthSessionProvider({ children }: { children: ReactNode }) {
     if (!session) return null;
     const version = sessionVersion.current;
     const tokens = { accessToken: session.accessToken, refreshToken: session.refreshToken };
-    const marked = await queueStorage(async () => {
-      if (!isCurrentSession(version)) return false;
-      await markRefreshPending(tokens);
-      return true;
-    });
+    let marked = false;
+    try {
+      marked = await queueStorage(async () => {
+        if (!isCurrentSession(version)) return false;
+        await markRefreshPending(tokens);
+        return true;
+      });
+    } catch {
+      requireSignInAgain(version);
+      return null;
+    }
     if (!marked || !isCurrentSession(version)) return null;
 
     let result: Awaited<ReturnType<typeof refreshSession>>;
