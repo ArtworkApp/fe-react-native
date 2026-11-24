@@ -14,6 +14,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import type { AuthMode, FormValues } from '../auth/form';
 import type { useAuthFormWorkflow } from '../auth/useAuthFormWorkflow';
+import { PasswordRecoveryLink } from './PasswordRecoveryLink';
 
 interface AuthFieldProps {
   control: Control<FormValues>;
@@ -90,6 +91,7 @@ export function AuthFormView({ mode, workflow }: AuthFormViewProps) {
               textContentType: isRegister ? 'newPassword' : 'password',
             }}
           />
+          {!isRegister ? <PasswordRecoveryLink /> : null}
           {isRegister ? (
             <AuthField
               control={workflow.control}

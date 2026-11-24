@@ -16,6 +16,13 @@ const session = {
 
 beforeEach(() => submitCredentials.mockReset());
 
+test('shows password recovery only on sign-in', async () => {
+  const { rerender } = await render(<AuthForm mode="login" onSubmit={submitCredentials} onAuthenticated={jest.fn()} />);
+  expect(screen.getByRole('button', { name: 'Forgot password?' })).toBeTruthy();
+  await rerender(<AuthForm mode="register" onSubmit={submitCredentials} onAuthenticated={jest.fn()} />);
+  expect(screen.queryByRole('button', { name: 'Forgot password?' })).toBeNull();
+});
+
 test('sign-in validates email and password before submitting', async () => {
   await render(<AuthForm mode="login" onSubmit={submitCredentials} onAuthenticated={jest.fn()} />);
 
