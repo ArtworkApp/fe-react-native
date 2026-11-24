@@ -30,6 +30,8 @@ Then start Expo with `npx expo start` and press `i` for the iOS Simulator or `a`
 
 Copy `.env.example` to `.env.local` and set `EXPO_PUBLIC_API_URL` to the backend's `/api/v1` URL. Use your computer's LAN IP for a physical phone (for example, `http://192.168.1.8:3001/api/v1`). The phone and computer must share a network, and port 3001 must be reachable. For an Android emulator, use `http://10.0.2.2:3001/api/v1`; for an iOS simulator, use `http://localhost:3001/api/v1`. Restart Expo after changing the value.
 
+Set `EXPO_PUBLIC_WEB_ORIGIN` separately to the web app's origin (for example, `http://192.168.1.8:3000` on the same LAN). Password recovery opens its `/forgot-password` page in the system browser. Use HTTPS for deployed builds and restart Expo after changing the setting. The recovery action stays disabled when the origin is missing or invalid.
+
 The home screen links to public artwork browsing and email sign-in. `/login` and `/register` send mobile credentials to the backend; a successful response returns to the previous screen, or the home screen when there is no navigation history. This step persists tokens in secure storage, attempts to restore the session on startup (including refresh when needed), and supports sign-out by clearing local credentials and requesting server revocation. The `/artworks` route loads the first 21 available artworks. Images use the backend image endpoint, which streams files from MinIO; the app does not connect to MinIO directly. Start and seed the backend and MinIO before testing images.
 
 Route tests live in `test/` because Expo Router treats files in `src/app/` as routes.

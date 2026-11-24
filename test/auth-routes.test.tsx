@@ -5,6 +5,7 @@ import { AuthSessionProvider, useAuthSession } from '../src/auth/AuthSessionProv
 import LoginScreen from '../src/app/(auth)/login';
 import RegisterScreen from '../src/app/(auth)/register';
 import { saveTokens } from '../src/auth/session-storage';
+import { restoreSession } from '../src/auth/restore-session';
 
 const mockReplace = jest.fn();
 const mockBack = jest.fn();
@@ -47,6 +48,12 @@ beforeEach(() => {
   mockBack.mockReset();
   mockCanGoBack.mockReset().mockReturnValue(true);
   jest.mocked(saveTokens).mockReset().mockResolvedValue(undefined);
+});
+
+test('explains when an invalidated session requires sign-in', async () => {
+  jest.mocked(restoreSession).mockResolvedValueOnce({ state: 'uncertain' });
+  await render(<AuthSessionProvider><LoginScreen /></AuthSessionProvider>);
+  expect(await screen.findByText('Your session could not be restored. Please sign in again.')).toBeTruthy();
 });
 
 test('does not navigate or authenticate locally when secure storage fails', async () => {

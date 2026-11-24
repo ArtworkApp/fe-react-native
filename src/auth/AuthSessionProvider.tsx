@@ -1,5 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from 'react';
+import { AppState, type AppStateStatus } from 'react-native';
 import type { MobileSession, UserProfile } from '../api/auth';
+import { getCurrentUser } from '../api/current-user';
 import { revokeSession } from '../api/logout';
 import { createAuthenticatedFetch } from '../api/authenticated-fetch';
 import { refreshSession } from '../api/refresh-session';
@@ -28,6 +30,9 @@ export function AuthSessionProvider({ children }: { children: ReactNode }) {
   const [signOutWarning, setSignOutWarning] = useState('');
   const [restorationState, setRestorationState] = useState<RestorationState>('loading');
   const restoration = useRef<ReturnType<typeof restoreSession> | null>(null);
+  const pendingRefresh = useRef<Promise<SessionTokens | null> | null>(null);
+  const foregroundCheck = useRef(false);
+  const appState = useRef<string | null>(AppState.currentState ?? null);
 
   const retryRestoration = useCallback((): void => {
     if (restoration.current) return;
@@ -75,6 +80,8 @@ export function AuthSessionProvider({ children }: { children: ReactNode }) {
   async function invalidateSession(): Promise<void> {
     sessionVersion.current++;
     updateSession(null);
+    setSignOutWarning('Your session could not be restored. Please sign in again.');
+    setRestorationState('ready');
     try {
       await queueStorage(clearTokens);
     } catch {
@@ -87,6 +94,7 @@ export function AuthSessionProvider({ children }: { children: ReactNode }) {
     sessionVersion.current++;
     updateSession(null);
     setSignOutWarning('Your session could not be restored. Please sign in again.');
+    setRestorationState('ready');
   }
 
   async function rotateActiveSession(): Promise<SessionTokens | null> {
@@ -137,11 +145,52 @@ export function AuthSessionProvider({ children }: { children: ReactNode }) {
     return rotated;
   }
 
+  function refreshActiveSessionOnce(): Promise<SessionTokens | null> {
+    if (!pendingRefresh.current) {
+      pendingRefresh.current = rotateActiveSession().finally(() => { pendingRefresh.current = null; });
+    }
+    return pendingRefresh.current;
+  }
+
+  async function verifyForegroundSession(session: MobileSession, version: number): Promise<void> {
+    const result = await getCurrentUser(session.accessToken);
+    if (!isCurrentSession(version)) return;
+    if (result.state === 'unauthorized' && sessionRef.current?.accessToken === session.accessToken) {
+      await refreshActiveSessionOnce();
+    }
+  }
+
+  async function checkForegroundSession(): Promise<void> {
+    const session = sessionRef.current;
+    if (!session || foregroundCheck.current || restoration.current) return;
+    foregroundCheck.current = true;
+    const version = sessionVersion.current;
+    let state: RestorationState = 'ready';
+    setRestorationState('loading');
+    try {
+      await verifyForegroundSession(session, version);
+    } catch {
+      state = 'retry';
+    } finally {
+      foregroundCheck.current = false;
+      if (isCurrentSession(version)) setRestorationState(state);
+    }
+  }
+
+  useEffect(() => {
+    const subscription = AppState.addEventListener('change', (nextState) => {
+      const returning = nextState === 'active' && appState.current !== 'active';
+      appState.current = nextState;
+      if (returning) void checkForegroundSession();
+    });
+    return () => subscription.remove();
+  }, []);
+
   const authenticatedFetch = useRef<ReturnType<typeof createAuthenticatedFetch> | null>(null);
   if (!authenticatedFetch.current) {
     authenticatedFetch.current = createAuthenticatedFetch({
       getTokens: () => sessionRef.current,
-      refresh: rotateActiveSession,
+      refresh: refreshActiveSessionOnce,
       invalidate: invalidateSession,
     });
   }
@@ -151,6 +200,7 @@ export function AuthSessionProvider({ children }: { children: ReactNode }) {
     if (!session) return;
     sessionVersion.current++;
     updateSession(null);
+    setRestorationState('ready');
     setSignOutWarning('');
     let storageCleared = true;
     try {
@@ -177,6 +227,7 @@ export function AuthSessionProvider({ children }: { children: ReactNode }) {
     if (sessionVersion.current !== version) return;
     setSignOutWarning('');
     updateSession(session);
+    setRestorationState('ready');
   }
 
   const value = { user: currentSession?.user ?? null, acceptSession, signOut, signOutWarning,

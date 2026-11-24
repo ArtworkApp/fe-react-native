@@ -14,6 +14,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import type { AuthMode, FormValues } from '../auth/form';
 import type { useAuthFormWorkflow } from '../auth/useAuthFormWorkflow';
+import { PasswordRecoveryLink } from './PasswordRecoveryLink';
 
 interface AuthFieldProps {
   control: Control<FormValues>;
@@ -27,6 +28,7 @@ interface AuthFieldProps {
 interface AuthFormViewProps {
   mode: AuthMode;
   workflow: ReturnType<typeof useAuthFormWorkflow>;
+  sessionWarning?: string;
 }
 
 function AuthField({ control, name, label, error, hint, inputProps }: AuthFieldProps) {
@@ -53,7 +55,7 @@ function AuthField({ control, name, label, error, hint, inputProps }: AuthFieldP
   );
 }
 
-export function AuthFormView({ mode, workflow }: AuthFormViewProps) {
+export function AuthFormView({ mode, workflow, sessionWarning }: AuthFormViewProps) {
   const isRegister = mode === 'register';
   const title = isRegister ? 'Create account' : 'Sign in';
 
@@ -66,6 +68,7 @@ export function AuthFormView({ mode, workflow }: AuthFormViewProps) {
         <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
           <Text style={styles.brand}>ArtworkApp</Text>
           <Text accessibilityRole="header" style={styles.title}>{title}</Text>
+          {sessionWarning ? <Text accessibilityRole="alert" style={styles.error}>{sessionWarning}</Text> : null}
           <AuthField
             control={workflow.control}
             name="email"
@@ -90,6 +93,7 @@ export function AuthFormView({ mode, workflow }: AuthFormViewProps) {
               textContentType: isRegister ? 'newPassword' : 'password',
             }}
           />
+          {!isRegister ? <PasswordRecoveryLink /> : null}
           {isRegister ? (
             <AuthField
               control={workflow.control}
