@@ -7,7 +7,7 @@ import type { AuthMode } from './form';
 
 export function AuthRoute({ mode }: { mode: AuthMode }) {
   const router = useRouter();
-  const { acceptSession, restorationState, retryRestoration } = useAuthSession();
+  const { acceptSession, restorationState, retryRestoration, signOutWarning } = useAuthSession();
 
   function submitCredentials(credentials: AuthCredentials): Promise<MobileSession> {
     return authenticate(mode, credentials);
@@ -38,6 +38,7 @@ export function AuthRoute({ mode }: { mode: AuthMode }) {
       mode={mode}
       onSubmit={submitCredentials}
       onAuthenticated={completeAuthentication}
+      sessionWarning={signOutWarning}
     />
   );
 }
