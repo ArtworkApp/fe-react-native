@@ -1,5 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from 'react';
-import { AppState } from 'react-native';
+import { AppState, type AppStateStatus } from 'react-native';
 import type { MobileSession, UserProfile } from '../api/auth';
 import { getCurrentUser } from '../api/current-user';
 import { revokeSession } from '../api/logout';
